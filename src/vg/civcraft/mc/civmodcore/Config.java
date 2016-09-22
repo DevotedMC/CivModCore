@@ -1,11 +1,8 @@
 package vg.civcraft.mc.civmodcore;
 
-import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.TreeMap;
-
-import com.google.common.reflect.ClassPath;
 
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -40,7 +37,7 @@ public class Config {
 	    plugin_ = plugin;
 	    initialize();
 	    
-	    for(Class clazz:ClassUtility.GetClassesForPlugin(plugin)){
+	    for(Class<?> clazz:ClassUtility.GetClassesForPlugin(plugin)){
 	    	scanAnnotations(clazz);
 	    }
 	    setConfig();
@@ -55,7 +52,7 @@ public class Config {
     dynamicOptions_.put(bug.name(), new ConfigOption(this, bug));
   }
 
-  private void scanAnnotations(Class clazz) {
+  private void scanAnnotations(Class<?> clazz) {
     try {
 //   plugin_.info("loading annotations for: "+clazz.getName());
       for (Method method : clazz.getDeclaredMethods()) {
@@ -154,6 +151,8 @@ public class Config {
 				break;
 			case String_List:
 				config_.set(c.getName(), c.getStringList());
+			default:
+				break;
 			}
 		}
 		plugin_.saveConfig();
