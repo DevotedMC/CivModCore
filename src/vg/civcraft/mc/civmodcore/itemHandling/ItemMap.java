@@ -370,6 +370,7 @@ public class ItemMap {
 		return items.keySet().size();
 	}
 
+	@SuppressWarnings("unchecked")
 	public Set<Entry<ItemStack, Integer>> getEntrySet() {
 		return ((HashMap<ItemStack, Integer>) items.clone()).entrySet();
 	}
@@ -650,6 +651,7 @@ public class ItemMap {
 		return copy;
 	}
 
+	@SuppressWarnings("unchecked")
 	public static NBTTagCompound mapToNBT(NBTTagCompound base, Map<String, Object> map) {
 		Bukkit.getServer().getLogger().log(Level.INFO, "Representing map --> NBTTagCompound");
 		if (map == null || base == null) return base;
@@ -713,6 +715,7 @@ public class ItemMap {
 		return base;
 	}
 
+	@SuppressWarnings("unchecked")
 	public static NBTTagList listToNBT(NBTTagList base, List<Object> list) {
 		Bukkit.getServer().getLogger().log(Level.INFO, "Representing list --> NBTTagList");
 		if (list == null || base == null) return base;
