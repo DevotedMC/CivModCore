@@ -1,12 +1,16 @@
 package vg.civcraft.mc.civmodcore;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.logging.Logger;
 
+import org.bukkit.Server;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
+import org.bukkit.plugin.PluginDescriptionFile;
+import org.bukkit.plugin.PluginLoader;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import vg.civcraft.mc.civmodcore.annotations.*;
@@ -23,6 +27,17 @@ public abstract class ACivMod extends JavaPlugin {
 	protected CommandHandler handle;
 	private static boolean initializedAPIs = false;
 	
+	public ACivMod() { }
+	
+    /**
+     * Constructor for unit testing.
+     * @deprecated
+     */
+    @Deprecated
+    public ACivMod(PluginLoader loader, Server server, PluginDescriptionFile description, File dataFolder, File file) {
+        super(loader, server, description, dataFolder, file);
+    }
+
 	protected abstract String getPluginName();
 	
 	public void severe(String message) {
