@@ -15,6 +15,7 @@ import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.AnyMateria
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.ExactlyMaterial;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.MaterialMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.RegexMaterial;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.name.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,6 +53,7 @@ public class ItemExpression {
 		parseMaterial(config);
 		parseAmount(config);
 		parseLore(config);
+		parseName(config);
 	}
 
 	private void parseMaterial(ConfigurationSection config) {
@@ -93,6 +95,17 @@ public class ItemExpression {
 			setLore(new ExactlyLore(config.getStringList("lore")));
 	}
 
+	private void parseName(ConfigurationSection config) {
+		if (config.contains("name.regex"))
+			setName(new RegexName(Pattern.compile(config.getString("name.regex"))));
+		else if ("any".equals(config.getString("name")))
+			setName(new AnyName());
+		else if ("vanilla".equals(config.getString("name")))
+			setName(new VanillaName());
+		else if (config.contains("name"))
+			setName(new ExactlyName(config.getString("name")));
+	}
+
 	/**
 	 * Runs this ItemExpression on a given ItemStack.
 	 *
@@ -105,7 +118,14 @@ public class ItemExpression {
 			return false;
 		else if (!amountMatcher.matches(item.getAmount()))
 			return false;
+		else if (!item.hasItemMeta() && !(loreMatcher instanceof AnyLore) && !(nameMatcher instanceof AnyLore))
+			// slightly gross, but passing in null if !hasItemMeta is also kinda gross
+			// the code here wouldn't look nice either
+			// java null chaining operator when?.
+			return false;
 		else if (!loreMatcher.matches(item.getItemMeta().getLore()))
+			return false;
+		else if (!nameMatcher.matches(item.getItemMeta().getDisplayName()))
 			return false;
 		return true;
 	}
@@ -138,5 +158,15 @@ public class ItemExpression {
 
 	public void setLore(LoreMatcher loreMatcher) {
 		this.loreMatcher = loreMatcher;
+	}
+
+	private NameMatcher nameMatcher;
+
+	public NameMatcher getName() {
+		return nameMatcher;
+	}
+
+	public void setName(NameMatcher nameMatcher) {
+		this.nameMatcher = nameMatcher;
 	}
 }
