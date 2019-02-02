@@ -1,7 +1,14 @@
 package vg.civcraft.mc.civmodcore.itemHandling.itemExpression;
 
+import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.AnyMaterial;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.ExactlyMaterial;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.MaterialMatcher;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.RegexMaterial;
+
+import java.util.regex.Pattern;
 
 /**
  * A unified syntax for matching any ItemStack for things like the material, amount, lore contents, and more.
@@ -23,6 +30,15 @@ public class ItemExpression {
 	 * @param configurationSection The config that options will be taken from.
 	 */
 	public void parseConfig(ConfigurationSection configurationSection) {
+		String materialString = configurationSection.getString("material", "any");
+		if (materialString.equals("any"))
+			setMaterial(new AnyMaterial());
+		else if (materialString.startsWith("regex ")) {
+			String regex = materialString.replaceFirst("^regex ", "");
+			Pattern pattern = Pattern.compile(regex);
+			setMaterial(new RegexMaterial(pattern));
+		} else
+			setMaterial(new ExactlyMaterial(Material.getMaterial(materialString)));
 	}
 
 	/**
@@ -30,8 +46,7 @@ public class ItemExpression {
 	 *
 	 * By default, it will match any ItemStack.
 	 */
-	public ItemExpression() {
-	}
+	public ItemExpression() {}
 
 	/**
 	 * Runs this ItemExpression on a given ItemStack.
@@ -41,6 +56,15 @@ public class ItemExpression {
 	 * @return If the given item matches.
 	 */
 	public boolean matches(ItemStack item) {
-		return true;
+		if (!materialMatcher.matches(item.getType()))
+			return false;
+		else
+			return true;
+	}
+
+	private MaterialMatcher materialMatcher = new AnyMaterial();
+
+	public void setMaterial(MaterialMatcher materialMatcher) {
+		this.materialMatcher = materialMatcher;
 	}
 }
