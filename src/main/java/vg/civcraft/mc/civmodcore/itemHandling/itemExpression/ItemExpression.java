@@ -2,7 +2,6 @@ package vg.civcraft.mc.civmodcore.itemHandling.itemExpression;
 
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.MemoryConfiguration;
 import org.bukkit.inventory.ItemStack;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount.AmountMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount.AnyAmount;
@@ -13,9 +12,6 @@ import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.ExactlyMat
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.MaterialMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.RegexMaterial;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
