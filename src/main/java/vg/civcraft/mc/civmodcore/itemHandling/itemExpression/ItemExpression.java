@@ -2,12 +2,20 @@ package vg.civcraft.mc.civmodcore.itemHandling.itemExpression;
 
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.MemoryConfiguration;
 import org.bukkit.inventory.ItemStack;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount.AmountMatcher;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount.AnyAmount;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount.ExactlyAmount;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount.RangeAmount;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.AnyMaterial;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.ExactlyMaterial;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.MaterialMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.RegexMaterial;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
@@ -30,6 +38,11 @@ public class ItemExpression {
 	 * @param config The config that options will be taken from.
 	 */
 	public void parseConfig(ConfigurationSection config) {
+		parseMaterial(config);
+		parseAmount(config);
+	}
+
+	private void parseMaterial(ConfigurationSection config) {
 		if (config.contains("material.exactly"))
 			setMaterial(new ExactlyMaterial(Material.getMaterial(config.getString("material.exactly"))));
 		else if (config.contains("material.regex"))
@@ -37,6 +50,39 @@ public class ItemExpression {
 		else if ("any".equals(config.getString("material")))
 			// yoda order because config.getString is null if doesn't exist
 			setMaterial(new AnyMaterial());
+	}
+
+	private void parseAmount(ConfigurationSection config) {
+		if (config.contains("amount.range"))
+			setAmount(new RangeAmount(
+					config.getInt("amount.range.low", 0),
+					config.getInt("amount.range.high"),
+					config.getBoolean("amount.range.inclusiveLow", true),
+					config.getBoolean("amount.range.inclusiveHigh", true)));
+		else if ("any".equals(config.getString("amount")))
+			setAmount(new AnyAmount());
+		else if (config.contains("amount"))
+			setAmount(new ExactlyAmount(config.getInt("amount")));
+	}
+
+	@SuppressWarnings("unchecked") // fix your warnings, java
+	private List<ConfigurationSection> getConfigList(ConfigurationSection config, String path)
+	{
+		if (!config.isList(path)) return null;
+
+		List<ConfigurationSection> list = new ArrayList<>();
+
+		for (Object object : config.getList(path)) {
+			if (object instanceof Map) {
+				MemoryConfiguration mc = new MemoryConfiguration();
+
+				mc.addDefaults((Map<String, Object>) object);
+
+				list.add(mc);
+			}
+		}
+
+		return list;
 	}
 
 	/**
@@ -64,5 +110,15 @@ public class ItemExpression {
 
 	public void setMaterial(MaterialMatcher materialMatcher) {
 		this.materialMatcher = materialMatcher;
+	}
+
+	private AmountMatcher amountMatcher = new AnyAmount();
+
+	public AmountMatcher getAmount() {
+		return amountMatcher;
+	}
+
+	public void setAmount(AmountMatcher amountMatcher) {
+		this.amountMatcher = amountMatcher;
 	}
 }
