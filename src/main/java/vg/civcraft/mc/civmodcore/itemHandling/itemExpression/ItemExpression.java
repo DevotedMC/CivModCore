@@ -103,8 +103,11 @@ public class ItemExpression {
 	public boolean matches(ItemStack item) {
 		if (!materialMatcher.matches(item.getType()))
 			return false;
-		else
-			return true;
+		else if (!amountMatcher.matches(item.getAmount()))
+			return false;
+		else if (!loreMatcher.matches(item.getItemMeta().getLore()))
+			return false;
+		return true;
 	}
 
 	private MaterialMatcher materialMatcher = new AnyMaterial();
