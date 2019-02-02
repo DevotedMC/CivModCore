@@ -29,6 +29,13 @@ import java.util.regex.Pattern;
  */
 public class ItemExpression {
 	/**
+	 * Creates the default ItemExpression.
+	 *
+	 * By default, it will match any ItemStack.
+	 */
+	public ItemExpression() {}
+
+	/**
 	 * Creates an ItemExpression from a section of bukkit configuration format.
 	 * @param configurationSection The subsection of config that should be parsed.
 	 */
@@ -87,13 +94,6 @@ public class ItemExpression {
 	}
 
 	/**
-	 * Creates the default ItemExpression.
-	 *
-	 * By default, it will match any ItemStack.
-	 */
-	public ItemExpression() {}
-
-	/**
 	 * Runs this ItemExpression on a given ItemStack.
 	 *
 	 * This will not mutate the ItemStack nor this ItemExpression.
@@ -108,6 +108,10 @@ public class ItemExpression {
 	}
 
 	private MaterialMatcher materialMatcher = new AnyMaterial();
+
+	public MaterialMatcher getMaterial() {
+		return materialMatcher;
+	}
 
 	public void setMaterial(MaterialMatcher materialMatcher) {
 		this.materialMatcher = materialMatcher;
