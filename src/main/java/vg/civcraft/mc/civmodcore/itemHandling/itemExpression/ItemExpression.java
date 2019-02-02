@@ -27,18 +27,16 @@ public class ItemExpression {
 	/**
 	 * Mutate this ItemExpression, overriding the existing options set for this with the options given in the
 	 * ConfigurationSection.
-	 * @param configurationSection The config that options will be taken from.
+	 * @param config The config that options will be taken from.
 	 */
-	public void parseConfig(ConfigurationSection configurationSection) {
-		String materialString = configurationSection.getString("material", "any");
-		if (materialString.equals("any"))
+	public void parseConfig(ConfigurationSection config) {
+		if (config.contains("material.exactly"))
+			setMaterial(new ExactlyMaterial(Material.getMaterial(config.getString("material.exactly"))));
+		else if (config.contains("material.regex"))
+			setMaterial(new RegexMaterial(Pattern.compile(config.getString("material.regex"))));
+		else if ("any".equals(config.getString("material")))
+			// yoda order because config.getString is null if doesn't exist
 			setMaterial(new AnyMaterial());
-		else if (materialString.startsWith("regex ")) {
-			String regex = materialString.replaceFirst("^regex ", "");
-			Pattern pattern = Pattern.compile(regex);
-			setMaterial(new RegexMaterial(pattern));
-		} else
-			setMaterial(new ExactlyMaterial(Material.getMaterial(materialString)));
 	}
 
 	/**
