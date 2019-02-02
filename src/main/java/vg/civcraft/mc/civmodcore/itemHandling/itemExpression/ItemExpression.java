@@ -43,13 +43,13 @@ public class ItemExpression {
 	}
 
 	private void parseMaterial(ConfigurationSection config) {
-		if (config.contains("material.exactly"))
-			setMaterial(new ExactlyMaterial(Material.getMaterial(config.getString("material.exactly"))));
-		else if (config.contains("material.regex"))
+		if (config.contains("material.regex"))
 			setMaterial(new RegexMaterial(Pattern.compile(config.getString("material.regex"))));
 		else if ("any".equals(config.getString("material")))
 			// yoda order because config.getString is null if doesn't exist
 			setMaterial(new AnyMaterial());
+		else if (config.contains("material"))
+			setMaterial(new ExactlyMaterial(Material.getMaterial(config.getString("material"))));
 	}
 
 	private void parseAmount(ConfigurationSection config) {
