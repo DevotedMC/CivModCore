@@ -65,26 +65,6 @@ public class ItemExpression {
 			setAmount(new ExactlyAmount(config.getInt("amount")));
 	}
 
-	@SuppressWarnings("unchecked") // fix your warnings, java
-	private List<ConfigurationSection> getConfigList(ConfigurationSection config, String path)
-	{
-		if (!config.isList(path)) return null;
-
-		List<ConfigurationSection> list = new ArrayList<>();
-
-		for (Object object : config.getList(path)) {
-			if (object instanceof Map) {
-				MemoryConfiguration mc = new MemoryConfiguration();
-
-				mc.addDefaults((Map<String, Object>) object);
-
-				list.add(mc);
-			}
-		}
-
-		return list;
-	}
-
 	/**
 	 * Creates the default ItemExpression.
 	 *
