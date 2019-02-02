@@ -7,11 +7,17 @@ import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount.AmountMatche
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount.AnyAmount;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount.ExactlyAmount;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount.RangeAmount;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.lore.AnyLore;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.lore.ExactlyLore;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.lore.LoreMatcher;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.lore.RegexLore;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.AnyMaterial;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.ExactlyMaterial;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.MaterialMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.RegexMaterial;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -38,6 +44,7 @@ public class ItemExpression {
 	public void parseConfig(ConfigurationSection config) {
 		parseMaterial(config);
 		parseAmount(config);
+		parseLore(config);
 	}
 
 	private void parseMaterial(ConfigurationSection config) {
@@ -61,6 +68,22 @@ public class ItemExpression {
 			setAmount(new AnyAmount());
 		else if (config.contains("amount"))
 			setAmount(new ExactlyAmount(config.getInt("amount")));
+	}
+
+	private void parseLore(ConfigurationSection config) {
+		if (config.contains("lore.regex")) {
+			List<String> patternsStr = config.getStringList("lore.regex");
+			List<Pattern> patterns = new ArrayList<>();
+			boolean multiline = config.getBoolean("lore.regexMultiline", true);
+
+			for (String patternStr : patternsStr) {
+				patterns.add(Pattern.compile(patternStr, multiline ? Pattern.MULTILINE : 0));
+			}
+			setLore(new RegexLore(patterns));
+		} else if ("any".equals(config.getString("lore")))
+			setLore(new AnyLore());
+		else if (config.contains("lore"))
+			setLore(new ExactlyLore(config.getStringList("lore")));
 	}
 
 	/**
@@ -98,5 +121,15 @@ public class ItemExpression {
 
 	public void setAmount(AmountMatcher amountMatcher) {
 		this.amountMatcher = amountMatcher;
+	}
+
+	private LoreMatcher loreMatcher = new AnyLore();
+
+	public LoreMatcher getLore() {
+		return loreMatcher;
+	}
+
+	public void setLore(LoreMatcher loreMatcher) {
+		this.loreMatcher = loreMatcher;
 	}
 }
