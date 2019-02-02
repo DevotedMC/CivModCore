@@ -118,7 +118,7 @@ public class ItemExpression {
 			return false;
 		else if (!amountMatcher.matches(item.getAmount()))
 			return false;
-		else if (!item.hasItemMeta() && !(loreMatcher instanceof AnyLore) && !(nameMatcher instanceof AnyLore))
+		else if (!item.hasItemMeta() && !(loreMatcher instanceof AnyLore) && !(nameMatcher instanceof AnyName))
 			// slightly gross, but passing in null if !hasItemMeta is also kinda gross
 			// the code here wouldn't look nice either
 			// java null chaining operator when?.
