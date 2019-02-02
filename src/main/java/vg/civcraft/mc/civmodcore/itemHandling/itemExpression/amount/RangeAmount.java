@@ -1,5 +1,8 @@
 package vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount;
 
+/**
+ * @author Ameliorate
+ */
 public class RangeAmount implements AmountMatcher {
 	public RangeAmount(int low, int high, boolean lowInclusive, boolean highInclusive) {
 		set(low, high);

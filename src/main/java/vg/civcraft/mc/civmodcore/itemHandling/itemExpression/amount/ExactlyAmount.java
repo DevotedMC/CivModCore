@@ -1,5 +1,8 @@
 package vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount;
 
+/**
+ * @author Ameliorate
+ */
 public class ExactlyAmount implements AmountMatcher {
 	public ExactlyAmount(int amount) {
 		this.amount = amount;

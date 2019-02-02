@@ -18,6 +18,8 @@ import java.util.regex.Pattern;
  * A unified syntax for matching any ItemStack for things like the material, amount, lore contents, and more.
  *
  * While mostly designed to be used in a .yaml config file, this can also be used from java.
+ *
+ * @author Ameliorate
  */
 public class ItemExpression {
 	/**

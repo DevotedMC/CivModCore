@@ -4,6 +4,9 @@ import org.bukkit.Material;
 
 import java.util.regex.Pattern;
 
+/**
+ * @author Ameliorate
+ */
 public class RegexMaterial implements MaterialMatcher {
 	public RegexMaterial(Pattern regex) {
 		this.regex = regex;
