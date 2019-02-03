@@ -60,6 +60,8 @@ public class ItemExpression {
 		setName(parseName(config, "name"));
 		setEnchantmentAny(parseEnchantment(config, "enchantmentsAny"));
 		setEnchantmentAll(parseEnchantment(config, "enchantmentsAll"));
+
+		unbreakable = config.getBoolean("unbreakable", false);
 	}
 
 	/**
@@ -167,7 +169,8 @@ public class ItemExpression {
 			return false;
 		else if (!durabilityMatcher.matches(item.getDurability()))
 			return false;
-		else if (!item.hasItemMeta() && !(loreMatcher instanceof AnyLore) && !(nameMatcher instanceof AnyName))
+		else if (!item.hasItemMeta() && !(loreMatcher instanceof AnyLore) && !(nameMatcher instanceof AnyName) &&
+			!enchantmentMatcherAll.matchesAny() && !enchantmentMatcherAny.matchesAny() && unbreakable != null)
 			// slightly gross, but passing in null if !hasItemMeta is also kinda gross
 			// the code here wouldn't look nice either
 			// java null chaining operator when?.
@@ -180,8 +183,15 @@ public class ItemExpression {
 			return false;
 		else if (!enchantmentMatcherAll.matches(item.getEnchantments(), false))
 			return false;
+		else if (unbreakable != null && item.getItemMeta().isUnbreakable() != unbreakable)
+			return false;
 		return true;
 	}
+
+	/**
+	 * null if matches unbreakable == true and unbreakable == false
+	 */
+	public Boolean unbreakable = null;
 
 	private MaterialMatcher materialMatcher = new AnyMaterial();
 
@@ -277,7 +287,7 @@ public class ItemExpression {
 		public List<EnchantmentMatcher> enchantmentMatchers;
 
 		public boolean matches(Map<Enchantment, Integer> enchantments, boolean isAny) {
-			if (enchantmentMatchers.size() == 1 && enchantmentMatchers.get(0) instanceof AnyEnchantment && enchantments.size() == 0)
+			if (matchesAny() && enchantments.size() == 0)
 				return true;
 
 			for (EnchantmentMatcher matcher : enchantmentMatchers) {
@@ -302,6 +312,10 @@ public class ItemExpression {
 				return true;
 			else
 				return false;
+		}
+
+		public boolean matchesAny() {
+			return enchantmentMatchers.size() == 1 && enchantmentMatchers.get(0) instanceof AnyEnchantment;
 		}
 	}
 }
