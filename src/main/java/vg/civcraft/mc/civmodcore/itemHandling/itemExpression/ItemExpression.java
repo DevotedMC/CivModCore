@@ -56,6 +56,20 @@ public class ItemExpression {
 		parseName(config);
 	}
 
+	/**
+	 * Gets a ItemExpression from the given path in the config
+	 * @param configurationSection The config to get the ItemExpression from
+	 * @param path The path to the ItemExpression
+	 * @return The ItemExpression in the config that path points to, or null if there was not an ItemExpression at path.
+	 */
+	public static ItemExpression getItemExpression(ConfigurationSection configurationSection, String path) {
+		if (configurationSection == null)
+			return null;
+		if (!configurationSection.contains(path))
+			return null;
+		return new ItemExpression(configurationSection.getConfigurationSection(path));
+	}
+
 	private void parseMaterial(ConfigurationSection config) {
 		if (config.contains("material.regex"))
 			setMaterial(new RegexMaterial(Pattern.compile(config.getString("material.regex"))));
