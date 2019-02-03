@@ -2,11 +2,15 @@ package vg.civcraft.mc.civmodcore.itemHandling.itemExpression;
 
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount.AmountMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount.AnyAmount;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount.ExactlyAmount;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount.RangeAmount;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enchantment.AnyEnchantment;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enchantment.EnchantmentMatcher;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enchantment.ExactlyEnchantment;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.lore.AnyLore;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.lore.ExactlyLore;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.lore.LoreMatcher;
@@ -17,8 +21,7 @@ import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.MaterialMa
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.RegexMaterial;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.name.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Pattern;
 
 /**
@@ -54,6 +57,8 @@ public class ItemExpression {
 		setAmount(parseAmount(config, "amount"));
 		setLore(parseLore(config, "lore"));
 		setName(parseName(config, "name"));
+		setEnchantmentAny(parseEnchantment(config, "enchantmentsAny"));
+		setEnchantmentAll(parseEnchantment(config, "enchantmentsAll"));
 	}
 
 	/**
@@ -124,6 +129,26 @@ public class ItemExpression {
 		return null;
 	}
 
+	private EnchantmentSetMatcher parseEnchantment(ConfigurationSection config, String path) {
+		ConfigurationSection enchantments = config.getConfigurationSection(path);
+		ArrayList<EnchantmentMatcher> enchantmentMatcher = new ArrayList<>();
+		for (String enchantName : enchantments.getKeys(false)) {
+			if (enchantName.equals("mode"))
+				continue;
+
+			if (config.getString(path + "." + enchantName).equals("any"))
+				// don't think too much about enchantmentsAll: any
+				// it works out
+				enchantmentMatcher.add(new AnyEnchantment());
+			else
+				enchantmentMatcher.add(
+						new ExactlyEnchantment(Enchantment.getByName(enchantName),
+						    parseAmount(config, path + "." + enchantName)));
+		}
+
+		return new EnchantmentSetMatcher(enchantmentMatcher);
+	}
+
 	/**
 	 * Runs this ItemExpression on a given ItemStack.
 	 *
@@ -144,6 +169,10 @@ public class ItemExpression {
 		else if (!loreMatcher.matches(item.getItemMeta().getLore()))
 			return false;
 		else if (!nameMatcher.matches(item.getItemMeta().getDisplayName()))
+			return false;
+		else if (!enchantmentMatcherAny.matches(item.getEnchantments(), true))
+			return false;
+		else if (!enchantmentMatcherAll.matches(item.getEnchantments(), false))
 			return false;
 		return true;
 	}
@@ -194,5 +223,66 @@ public class ItemExpression {
 		if (nameMatcher == null)
             return;
 		this.nameMatcher = nameMatcher;
+	}
+
+	private EnchantmentSetMatcher enchantmentMatcherAny =
+			new EnchantmentSetMatcher(Collections.singletonList(new AnyEnchantment()));
+
+	public EnchantmentSetMatcher getEnchantmentAny() {
+		return enchantmentMatcherAny;
+	}
+
+	public void setEnchantmentAny(EnchantmentSetMatcher enchantmentMatcher) {
+		if (enchantmentMatcher == null)
+			return;
+		this.enchantmentMatcherAny = enchantmentMatcher;
+	}
+
+	private EnchantmentSetMatcher enchantmentMatcherAll =
+			new EnchantmentSetMatcher(Collections.singletonList(new AnyEnchantment()));
+
+	public EnchantmentSetMatcher getEnchantmentAll() {
+		return enchantmentMatcherAll;
+	}
+
+	public void setEnchantmentAll(EnchantmentSetMatcher enchantmentMatcherAll) {
+		this.enchantmentMatcherAll = enchantmentMatcherAll;
+	}
+
+
+	public class EnchantmentSetMatcher {
+		public EnchantmentSetMatcher(List<EnchantmentMatcher> enchantmentMatchers) {
+			this.enchantmentMatchers = enchantmentMatchers;
+		}
+
+		public List<EnchantmentMatcher> enchantmentMatchers;
+
+		public boolean matches(Map<Enchantment, Integer> enchantments, boolean isAny) {
+			if (enchantmentMatchers.size() == 1 && enchantmentMatchers.get(0) instanceof AnyEnchantment && enchantments.size() == 0)
+				return true;
+
+			for (EnchantmentMatcher matcher : enchantmentMatchers) {
+				boolean matchedOne = false;
+
+				for (Map.Entry<Enchantment, Integer> entry : enchantments.entrySet()) {
+					Enchantment enchantment = entry.getKey();
+					int level = entry.getValue();
+
+					if (matcher.matches(enchantment, level)) {
+						matchedOne = true;
+						if (isAny)
+							return true;
+					}
+				}
+
+				if (!isAny && !matchedOne)
+					return false;
+			}
+
+			if (!isAny)
+				return true;
+			else
+				return false;
+		}
 	}
 }
