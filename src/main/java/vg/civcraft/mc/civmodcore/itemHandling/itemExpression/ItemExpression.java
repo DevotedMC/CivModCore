@@ -171,7 +171,8 @@ public class ItemExpression {
 		else if (!durabilityMatcher.matches(item.getDurability()))
 			return false;
 		else if (!item.hasItemMeta() && !(loreMatcher instanceof AnyLore) && !(nameMatcher instanceof AnyName) &&
-			!enchantmentMatcherAll.matchesAny() && !enchantmentMatcherAny.matchesAny() && unbreakable != null)
+				!enchantmentMatcherAll.matchesAny() && !enchantmentMatcherAny.matchesAny() && !getEnchantmentMatcherNone.matchesNone() &&
+				unbreakable != null)
 			// slightly gross, but passing in null if !hasItemMeta is also kinda gross
 			// the code here wouldn't look nice either
 			// java null chaining operator when?.
@@ -332,6 +333,10 @@ public class ItemExpression {
 
 		public boolean matchesAny() {
 			return enchantmentMatchers.size() == 1 && enchantmentMatchers.get(0) instanceof AnyEnchantment;
+		}
+
+		public boolean matchesNone() {
+			return enchantmentMatchers.size() == 1 && enchantmentMatchers.get(0) instanceof NoEnchantment;
 		}
 	}
 }
