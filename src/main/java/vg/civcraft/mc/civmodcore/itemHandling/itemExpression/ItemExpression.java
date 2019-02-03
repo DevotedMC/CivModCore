@@ -269,7 +269,6 @@ public class ItemExpression {
 		this.durabilityMatcher = durabilityMatcher;
 	}
 
-
 	public class EnchantmentSetMatcher {
 		public EnchantmentSetMatcher(List<EnchantmentMatcher> enchantmentMatchers) {
 			this.enchantmentMatchers = enchantmentMatchers;
