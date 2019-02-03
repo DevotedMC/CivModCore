@@ -55,6 +55,7 @@ public class ItemExpression {
 	public void parseConfig(ConfigurationSection config) {
 		setMaterial(parseMaterial(config, "material"));
 		setAmount(parseAmount(config, "amount"));
+		setDurability(parseAmount(config, "durability"));
 		setLore(parseLore(config, "lore"));
 		setName(parseName(config, "name"));
 		setEnchantmentAny(parseEnchantment(config, "enchantmentsAny"));
@@ -161,6 +162,8 @@ public class ItemExpression {
 			return false;
 		else if (!amountMatcher.matches(item.getAmount()))
 			return false;
+		else if (!durabilityMatcher.matches(item.getDurability()))
+			return false;
 		else if (!item.hasItemMeta() && !(loreMatcher instanceof AnyLore) && !(nameMatcher instanceof AnyName))
 			// slightly gross, but passing in null if !hasItemMeta is also kinda gross
 			// the code here wouldn't look nice either
@@ -247,6 +250,18 @@ public class ItemExpression {
 
 	public void setEnchantmentAll(EnchantmentSetMatcher enchantmentMatcherAll) {
 		this.enchantmentMatcherAll = enchantmentMatcherAll;
+	}
+
+	private AmountMatcher durabilityMatcher = new AnyAmount();
+
+	public AmountMatcher getDurability() {
+		return durabilityMatcher;
+	}
+
+	public void setDurability(AmountMatcher durabilityMatcher) {
+		if (durabilityMatcher == null)
+			return;
+		this.durabilityMatcher = durabilityMatcher;
 	}
 
 
