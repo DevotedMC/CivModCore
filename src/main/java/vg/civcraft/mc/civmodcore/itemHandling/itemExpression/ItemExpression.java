@@ -61,6 +61,7 @@ public class ItemExpression {
 		setName(parseName(config, "name"));
 		setEnchantmentAny(parseEnchantment(config, "enchantmentsAny"));
 		setEnchantmentAll(parseEnchantment(config, "enchantmentsAll"));
+		setEnchantmentNone(parseEnchantment(config, "enchantmentsNone"));
 
 		unbreakable = config.getBoolean("unbreakable", false);
 	}
@@ -278,7 +279,7 @@ public class ItemExpression {
 		return getEnchantmentMatcherNone;
 	}
 
-	public void setGetEnchantmentNone(EnchantmentSetMatcher getEnchantmentMatcherNone) {
+	public void setEnchantmentNone(EnchantmentSetMatcher getEnchantmentMatcherNone) {
 		if (getEnchantmentMatcherNone == null)
 			return;
 		this.getEnchantmentMatcherNone = getEnchantmentMatcherNone;
