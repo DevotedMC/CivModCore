@@ -11,6 +11,7 @@ import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount.RangeAmount;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enchantment.AnyEnchantment;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enchantment.EnchantmentMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enchantment.ExactlyEnchantment;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enchantment.NoEnchantment;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.lore.AnyLore;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.lore.ExactlyLore;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.lore.LoreMatcher;
@@ -183,6 +184,8 @@ public class ItemExpression {
 			return false;
 		else if (!enchantmentMatcherAll.matches(item.getEnchantments(), false))
 			return false;
+		else if (getEnchantmentMatcherNone.matches(item.getEnchantments(), false))
+			return false;
 		else if (unbreakable != null && item.getItemMeta().isUnbreakable() != unbreakable)
 			return false;
 		return true;
@@ -265,6 +268,19 @@ public class ItemExpression {
 		if (materialMatcher == null)
 			return;
 		this.enchantmentMatcherAll = enchantmentMatcherAll;
+	}
+
+	private EnchantmentSetMatcher getEnchantmentMatcherNone =
+			new EnchantmentSetMatcher(Collections.singletonList(new NoEnchantment()));
+
+	public EnchantmentSetMatcher getGetEnchantmentNone() {
+		return getEnchantmentMatcherNone;
+	}
+
+	public void setGetEnchantmentNone(EnchantmentSetMatcher getEnchantmentMatcherNone) {
+		if (getEnchantmentMatcherNone == null)
+			return;
+		this.getEnchantmentMatcherNone = getEnchantmentMatcherNone;
 	}
 
 	private AmountMatcher durabilityMatcher = new AnyAmount();
