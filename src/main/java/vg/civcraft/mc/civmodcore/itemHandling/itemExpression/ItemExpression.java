@@ -132,6 +132,9 @@ public class ItemExpression {
 
 	private EnchantmentSetMatcher parseEnchantment(ConfigurationSection config, String path) {
 		ConfigurationSection enchantments = config.getConfigurationSection(path);
+		if (enchantments == null)
+			return null;
+
 		ArrayList<EnchantmentMatcher> enchantmentMatcher = new ArrayList<>();
 		for (String enchantName : enchantments.getKeys(false)) {
 			if (enchantName.equals("mode"))
@@ -249,6 +252,8 @@ public class ItemExpression {
 	}
 
 	public void setEnchantmentAll(EnchantmentSetMatcher enchantmentMatcherAll) {
+		if (materialMatcher == null)
+			return;
 		this.enchantmentMatcherAll = enchantmentMatcherAll;
 	}
 
