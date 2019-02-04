@@ -172,7 +172,7 @@ public class ItemExpression {
 		else if (!durabilityMatcher.matches(item.getDurability()))
 			return false;
 		else if (!item.hasItemMeta() && !(loreMatcher instanceof AnyLore) && !(nameMatcher instanceof AnyName) &&
-				!enchantmentMatcherAll.matchesAny() && !enchantmentMatcherAny.matchesAny() && !getEnchantmentMatcherNone.matchesNone() &&
+				!enchantmentMatcherAll.matchesAny() && !enchantmentMatcherAny.matchesAny() && !enchantmentMatcherNone.matchesNone() &&
 				unbreakable != null)
 			// slightly gross, but passing in null if !hasItemMeta is also kinda gross
 			// the code here wouldn't look nice either
@@ -186,7 +186,7 @@ public class ItemExpression {
 			return false;
 		else if (!enchantmentMatcherAll.matches(item.getEnchantments(), false))
 			return false;
-		else if (getEnchantmentMatcherNone.matches(item.getEnchantments(), false))
+		else if (enchantmentMatcherNone.matches(item.getEnchantments(), false))
 			return false;
 		else if (unbreakable != null && item.getItemMeta().isUnbreakable() != unbreakable)
 			return false;
@@ -272,17 +272,17 @@ public class ItemExpression {
 		this.enchantmentMatcherAll = enchantmentMatcherAll;
 	}
 
-	private EnchantmentSetMatcher getEnchantmentMatcherNone =
+	private EnchantmentSetMatcher enchantmentMatcherNone =
 			new EnchantmentSetMatcher(Collections.singletonList(new NoEnchantment()));
 
 	public EnchantmentSetMatcher getGetEnchantmentNone() {
-		return getEnchantmentMatcherNone;
+		return enchantmentMatcherNone;
 	}
 
 	public void setEnchantmentNone(EnchantmentSetMatcher getEnchantmentMatcherNone) {
 		if (getEnchantmentMatcherNone == null)
 			return;
-		this.getEnchantmentMatcherNone = getEnchantmentMatcherNone;
+		this.enchantmentMatcherNone = getEnchantmentMatcherNone;
 	}
 
 	private AmountMatcher durabilityMatcher = new AnyAmount();
