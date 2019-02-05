@@ -67,7 +67,10 @@ public class ItemExpression {
 		setEnchantmentHeldAll(parseEnchantment(config, "enchantmentsHeldAll"));
 		setEnchantmentHeldNone(parseEnchantment(config, "enchantmentsHeldNone"));
 
-		unbreakable = config.getBoolean("unbreakable", false);
+		if (config.contains("unbreakable"))
+			unbreakable = config.getBoolean("unbreakable");
+		else
+			unbreakable = null;
 	}
 
 	/**
