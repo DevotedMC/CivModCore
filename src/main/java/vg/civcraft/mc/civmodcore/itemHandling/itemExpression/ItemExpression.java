@@ -115,14 +115,11 @@ public class ItemExpression {
 
 	private LoreMatcher parseLore(ConfigurationSection config, String path) {
 		if (config.contains(path + ".regex")) {
-			List<String> patternsStr = config.getStringList(path + ".regex");
-			List<Pattern> patterns = new ArrayList<>();
+			String patternStr = config.getString(path + ".regex");
 			boolean multiline = config.getBoolean(path + ".regexMultiline", true);
+			Pattern pattern = Pattern.compile(patternStr, multiline ? Pattern.MULTILINE : 0);
 
-			for (String patternStr : patternsStr) {
-				patterns.add(Pattern.compile(patternStr, multiline ? Pattern.MULTILINE : 0));
-			}
-			return(new RegexLore(patterns));
+			return(new RegexLore(pattern));
 		} else if ("any".equals(config.getString(path)))
 			return(new AnyLore());
 		else if (config.contains(path))

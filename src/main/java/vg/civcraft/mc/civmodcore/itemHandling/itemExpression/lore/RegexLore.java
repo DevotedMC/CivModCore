@@ -1,6 +1,5 @@
 package vg.civcraft.mc.civmodcore.itemHandling.itemExpression.lore;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -8,15 +7,11 @@ import java.util.regex.Pattern;
  * @author Ameliorate
  */
 public class RegexLore implements LoreMatcher {
-	public RegexLore(List<Pattern> patterns) {
-		this.patterns = patterns;
+	public RegexLore(Pattern pattern) {
+		this.pattern = pattern;
 	}
 
-	public RegexLore(Pattern... patterns) {
-		this(Arrays.asList(patterns));
-	}
-
-	public List<Pattern> patterns;
+	public Pattern pattern;
 
 	@Override
 	public boolean matches(List<String> lore) {
@@ -26,10 +21,8 @@ public class RegexLore implements LoreMatcher {
 			loreStr.append('\n');
 		}
 
-		for (Pattern pattern : patterns) {
-			if (pattern.matcher(loreStr).matches())
-				return true;
-		}
+		if (pattern.matcher(loreStr).matches())
+			return true;
 		return false;
 	}
 }
