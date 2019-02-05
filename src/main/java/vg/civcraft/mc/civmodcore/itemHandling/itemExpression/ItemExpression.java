@@ -162,22 +162,22 @@ public class ItemExpression {
 	 * @return If the given item matches.
 	 */
 	public boolean matches(ItemStack item) {
+		ItemMeta meta;
+		if (item.hasItemMeta()) {
+			meta = item.getItemMeta();
+		} else {
+			meta = new ItemStack(Material.IRON_AXE, 1).getItemMeta(); // clever hack
+		}
+
 		if (!materialMatcher.matches(item.getType()))
 			return false;
 		else if (!amountMatcher.matches(item.getAmount()))
 			return false;
 		else if (!durabilityMatcher.matches(item.getDurability()))
 			return false;
-		else if (!item.hasItemMeta() && !(loreMatcher instanceof AnyLore) && !(nameMatcher instanceof AnyName) &&
-				enchantmentMatcherAll.matchesAny() && enchantmentMatcherAny.matchesAny() && enchantmentMatcherNone.matchesNone() &&
-				unbreakable != null)
-			// slightly gross, but passing in null if !hasItemMeta is also kinda gross
-			// the code here wouldn't look nice either
-			// java null chaining operator when?.
+		else if (!loreMatcher.matches(meta.getLore()))
 			return false;
-		else if (!loreMatcher.matches(item.getItemMeta().getLore()))
-			return false;
-		else if (!nameMatcher.matches(item.getItemMeta().getDisplayName()))
+		else if (!nameMatcher.matches(meta.getDisplayName()))
 			return false;
 		else if (!enchantmentMatcherAny.matches(item.getEnchantments(), true))
 			return false;
@@ -185,16 +185,13 @@ public class ItemExpression {
 			return false;
 		else if (enchantmentMatcherNone.matches(item.getEnchantments(), false))
 			return false;
-		else if (unbreakable != null && item.getItemMeta().isUnbreakable() != unbreakable)
+		else if (unbreakable != null && meta.isUnbreakable() != unbreakable)
 			return false;
-		else if (!(item.getItemMeta() instanceof EnchantmentStorageMeta) && !enchantmentMatcherHeldAll.matchesAny() &&
-				!enchantmentMatcherHeldAny.matchesAny() && !enchantmentMatcherHeldNone.matchesNone())
+		else if (!enchantmentMatcherHeldAny.matches(castOrNull(meta), true))
 			return false;
-		else if (!enchantmentMatcherHeldAny.matches(castOrNull(item.getItemMeta()), true))
+		else if (!enchantmentMatcherHeldAll.matches(castOrNull(meta), false))
 			return false;
-		else if (!enchantmentMatcherHeldAll.matches(castOrNull(item.getItemMeta()), false))
-			return false;
-		else if (enchantmentMatcherHeldNone.matches(castOrNull(item.getItemMeta()), false))
+		else if (enchantmentMatcherHeldNone.matches(castOrNull(meta), false))
 			return false;
 		return true;
 	}
@@ -358,9 +355,6 @@ public class ItemExpression {
 		public List<EnchantmentMatcher> enchantmentMatchers;
 
 		public boolean matches(Map<Enchantment, Integer> enchantments, boolean isAny) {
-			if (matchesAny() && enchantments.size() == 0)
-				return true;
-
 			for (EnchantmentMatcher matcher : enchantmentMatchers) {
 				boolean matchedOne = false;
 
@@ -383,14 +377,6 @@ public class ItemExpression {
 				return true;
 			else
 				return false;
-		}
-
-		public boolean matchesAny() {
-			return enchantmentMatchers.size() == 1 && enchantmentMatchers.get(0) instanceof AnyEnchantment;
-		}
-
-		public boolean matchesNone() {
-			return enchantmentMatchers.size() == 1 && enchantmentMatchers.get(0) instanceof NoEnchantment;
 		}
 	}
 }

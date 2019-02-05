@@ -15,14 +15,8 @@ public class RegexLore implements LoreMatcher {
 
 	@Override
 	public boolean matches(List<String> lore) {
-		StringBuilder loreStr = new StringBuilder();
-		for (String line : lore) {
-			loreStr.append(line);
-			loreStr.append('\n');
-		}
-
-		if (pattern.matcher(loreStr).matches())
-			return true;
-		return false;
+		if (lore == null)
+			return false;
+		return pattern.matcher(String.join("\n", lore)).find();
 	}
 }
