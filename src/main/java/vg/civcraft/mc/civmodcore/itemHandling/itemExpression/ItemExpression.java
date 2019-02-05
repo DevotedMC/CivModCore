@@ -4,6 +4,7 @@ import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount.AmountMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount.AnyAmount;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount.ExactlyAmount;
@@ -62,6 +63,9 @@ public class ItemExpression {
 		setEnchantmentAny(parseEnchantment(config, "enchantmentsAny"));
 		setEnchantmentAll(parseEnchantment(config, "enchantmentsAll"));
 		setEnchantmentNone(parseEnchantment(config, "enchantmentsNone"));
+		setEnchantmentHeldAny(parseEnchantment(config, "enchantmentsHeldAny"));
+		setEnchantmentHeldAll(parseEnchantment(config, "enchantmentsHeldAll"));
+		setEnchantmentHeldNone(parseEnchantment(config, "enchantmentsHeldNone"));
 
 		unbreakable = config.getBoolean("unbreakable", false);
 	}
@@ -190,6 +194,15 @@ public class ItemExpression {
 			return false;
 		else if (unbreakable != null && item.getItemMeta().isUnbreakable() != unbreakable)
 			return false;
+		else if (!(item.getItemMeta() instanceof EnchantmentStorageMeta) && !enchantmentMatcherHeldAll.matchesAny() &&
+				!enchantmentMatcherHeldAny.matchesAny() && !enchantmentMatcherHeldNone.matchesNone())
+			return false;
+		else if (!enchantmentMatcherHeldAny.matches(((EnchantmentStorageMeta) item.getItemMeta()).getStoredEnchants(), true))
+			return false;
+		else if (!enchantmentMatcherHeldAll.matches(((EnchantmentStorageMeta) item.getItemMeta()).getStoredEnchants(), false))
+			return false;
+		else if (enchantmentMatcherHeldNone.matches(((EnchantmentStorageMeta) item.getItemMeta()).getStoredEnchants(), false))
+			return false;
 		return true;
 	}
 
@@ -284,6 +297,45 @@ public class ItemExpression {
 			return;
 		this.enchantmentMatcherNone = getEnchantmentMatcherNone;
 	}
+
+	public EnchantmentSetMatcher getEnchantmentHeldAny() {
+		return enchantmentMatcherHeldAny;
+	}
+
+	public void setEnchantmentHeldAny(EnchantmentSetMatcher enchantmentMatcherHeldAny) {
+		if (enchantmentMatcherHeldAny == null)
+			return;
+		this.enchantmentMatcherHeldAny = enchantmentMatcherHeldAny;
+	}
+
+	public EnchantmentSetMatcher getEnchantmentHeldAll() {
+		return enchantmentMatcherHeldAll;
+	}
+
+	public void setEnchantmentHeldAll(EnchantmentSetMatcher enchantmentMatcherHeldAll) {
+		if (enchantmentMatcherHeldAll == null)
+			return;
+		this.enchantmentMatcherHeldAll = enchantmentMatcherHeldAll;
+	}
+
+	public EnchantmentSetMatcher getEnchantmentHeldNone() {
+		return enchantmentMatcherHeldNone;
+	}
+
+	public void setEnchantmentHeldNone(EnchantmentSetMatcher enchantmentMatcherHeldNone) {
+		if (enchantmentMatcherHeldNone == null)
+			return;
+		this.enchantmentMatcherHeldNone = enchantmentMatcherHeldNone;
+	}
+
+	private EnchantmentSetMatcher enchantmentMatcherHeldAny =
+			new EnchantmentSetMatcher(Collections.singletonList(new AnyEnchantment()));
+
+	private EnchantmentSetMatcher enchantmentMatcherHeldAll =
+			new EnchantmentSetMatcher(Collections.singletonList(new AnyEnchantment()));
+
+	private EnchantmentSetMatcher enchantmentMatcherHeldNone =
+			new EnchantmentSetMatcher(Collections.singletonList(new NoEnchantment()));
 
 	private AmountMatcher durabilityMatcher = new AnyAmount();
 
