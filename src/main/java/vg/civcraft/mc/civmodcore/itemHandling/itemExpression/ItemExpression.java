@@ -275,7 +275,7 @@ public class ItemExpression {
 	private EnchantmentSetMatcher enchantmentMatcherNone =
 			new EnchantmentSetMatcher(Collections.singletonList(new NoEnchantment()));
 
-	public EnchantmentSetMatcher getGetEnchantmentNone() {
+	public EnchantmentSetMatcher getEnchantmentNone() {
 		return enchantmentMatcherNone;
 	}
 
