@@ -5,6 +5,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
+import org.bukkit.inventory.meta.ItemMeta;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount.AmountMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount.AnyAmount;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount.ExactlyAmount;
@@ -148,17 +149,9 @@ public class ItemExpression {
 
 		ArrayList<EnchantmentMatcher> enchantmentMatcher = new ArrayList<>();
 		for (String enchantName : enchantments.getKeys(false)) {
-			if (enchantName.equals("mode"))
-				continue;
-
-			if (config.getString(path + "." + enchantName).equals("any"))
-				// don't think too much about enchantmentsAll: any
-				// it works out
-				enchantmentMatcher.add(new AnyEnchantment());
-			else
-				enchantmentMatcher.add(
-						new ExactlyEnchantment(Enchantment.getByName(enchantName),
-						    parseAmount(config, path + "." + enchantName)));
+			enchantmentMatcher.add(
+					new ExactlyEnchantment(Enchantment.getByName(enchantName),
+							parseAmount(config, path + "." + enchantName)));
 		}
 
 		return new EnchantmentSetMatcher(enchantmentMatcher);
@@ -172,6 +165,8 @@ public class ItemExpression {
 	 * @return If the given item matches.
 	 */
 	public boolean matches(ItemStack item) {
+		System.out.println(item.getItemMeta().getDisplayName().length());
+
 		if (!materialMatcher.matches(item.getType()))
 			return false;
 		else if (!amountMatcher.matches(item.getAmount()))
@@ -179,7 +174,7 @@ public class ItemExpression {
 		else if (!durabilityMatcher.matches(item.getDurability()))
 			return false;
 		else if (!item.hasItemMeta() && !(loreMatcher instanceof AnyLore) && !(nameMatcher instanceof AnyName) &&
-				!enchantmentMatcherAll.matchesAny() && !enchantmentMatcherAny.matchesAny() && !enchantmentMatcherNone.matchesNone() &&
+				enchantmentMatcherAll.matchesAny() && enchantmentMatcherAny.matchesAny() && enchantmentMatcherNone.matchesNone() &&
 				unbreakable != null)
 			// slightly gross, but passing in null if !hasItemMeta is also kinda gross
 			// the code here wouldn't look nice either
@@ -200,13 +195,21 @@ public class ItemExpression {
 		else if (!(item.getItemMeta() instanceof EnchantmentStorageMeta) && !enchantmentMatcherHeldAll.matchesAny() &&
 				!enchantmentMatcherHeldAny.matchesAny() && !enchantmentMatcherHeldNone.matchesNone())
 			return false;
-		else if (!enchantmentMatcherHeldAny.matches(((EnchantmentStorageMeta) item.getItemMeta()).getStoredEnchants(), true))
+		else if (!enchantmentMatcherHeldAny.matches(castOrNull(item.getItemMeta()), true))
 			return false;
-		else if (!enchantmentMatcherHeldAll.matches(((EnchantmentStorageMeta) item.getItemMeta()).getStoredEnchants(), false))
+		else if (!enchantmentMatcherHeldAll.matches(castOrNull(item.getItemMeta()), false))
 			return false;
-		else if (enchantmentMatcherHeldNone.matches(((EnchantmentStorageMeta) item.getItemMeta()).getStoredEnchants(), false))
+		else if (enchantmentMatcherHeldNone.matches(castOrNull(item.getItemMeta()), false))
 			return false;
 		return true;
+	}
+
+	private Map<Enchantment, Integer> castOrNull(ItemMeta itemMeta) {
+		Map<Enchantment, Integer> result = (itemMeta instanceof EnchantmentStorageMeta) ?
+				((EnchantmentStorageMeta) itemMeta).getStoredEnchants() : null;
+		if (result == null)
+			result = new HashMap<>();
+		return result;
 	}
 
 	/**
@@ -250,7 +253,7 @@ public class ItemExpression {
 		this.loreMatcher = loreMatcher;
 	}
 
-	private NameMatcher nameMatcher;
+	private NameMatcher nameMatcher = new AnyName();
 
 	public NameMatcher getName() {
 		return nameMatcher;
@@ -283,7 +286,7 @@ public class ItemExpression {
 	}
 
 	public void setEnchantmentAll(EnchantmentSetMatcher enchantmentMatcherAll) {
-		if (materialMatcher == null)
+		if (enchantmentMatcherAll == null)
 			return;
 		this.enchantmentMatcherAll = enchantmentMatcherAll;
 	}
