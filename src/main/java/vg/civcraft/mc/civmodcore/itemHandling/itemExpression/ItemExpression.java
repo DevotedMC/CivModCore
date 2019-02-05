@@ -91,9 +91,6 @@ public class ItemExpression {
 	private MaterialMatcher parseMaterial(ConfigurationSection config, String path) {
 		if (config.contains(path + ".regex"))
 			return(new RegexMaterial(Pattern.compile(config.getString(path + ".regex"))));
-		else if ("any".equals(config.getString(path)))
-			// yoda order because config.getString is null if doesn't exist
-			return(new AnyMaterial());
 		else if (config.contains(path))
 			return(new ExactlyMaterial(Material.getMaterial(config.getString(path))));
 		return null;
@@ -120,9 +117,7 @@ public class ItemExpression {
 			Pattern pattern = Pattern.compile(patternStr, multiline ? Pattern.MULTILINE : 0);
 
 			return(new RegexLore(pattern));
-		} else if ("any".equals(config.getString(path)))
-			return(new AnyLore());
-		else if (config.contains(path))
+		} else if (config.contains(path))
 			return(new ExactlyLore(config.getStringList(path)));
 		return null;
 	}
@@ -130,8 +125,6 @@ public class ItemExpression {
 	private NameMatcher parseName(ConfigurationSection config, String path) {
 		if (config.contains(path + ".regex"))
 			return(new RegexName(Pattern.compile(config.getString(path + ".regex"))));
-		else if ("any".equals(config.getString(path)))
-			return(new AnyName());
 		else if ("vanilla".equals(config.getString(path)))
 			return(new VanillaName());
 		else if (config.contains(path))
