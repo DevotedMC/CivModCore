@@ -162,8 +162,6 @@ public class ItemExpression {
 	 * @return If the given item matches.
 	 */
 	public boolean matches(ItemStack item) {
-		System.out.println(item.getItemMeta().getDisplayName().length());
-
 		if (!materialMatcher.matches(item.getType()))
 			return false;
 		else if (!amountMatcher.matches(item.getAmount()))
