@@ -336,6 +336,9 @@ public class ItemExpression {
 		public List<EnchantmentMatcher> enchantmentMatchers;
 
 		public boolean matches(Map<Enchantment, Integer> enchantments, boolean isAny) {
+			if (matchesAny() && enchantments.size() == 0)
+				return true;
+
 			for (EnchantmentMatcher matcher : enchantmentMatchers) {
 				boolean matchedOne = false;
 
@@ -358,6 +361,10 @@ public class ItemExpression {
 				return true;
 			else
 				return false;
+		}
+
+		public boolean matchesAny() {
+			return enchantmentMatchers.size() == 1 && enchantmentMatchers.get(0) instanceof AnyEnchantment;
 		}
 	}
 }
