@@ -3,6 +3,7 @@ package vg.civcraft.mc.civmodcore.itemHandling.itemExpression;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -13,6 +14,7 @@ import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.name.*;
 
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Pattern;
 
 /**
@@ -183,6 +185,98 @@ public class ItemExpression {
 		if (result == null)
 			result = new HashMap<>();
 		return result;
+	}
+
+	/**
+	 * Removes amount items that match this ItemExpression from tne inventory.
+	 *
+	 * This function correctly handles situations where the inventory has two or more ItemStacks that do not satisfy
+	 * .isSimilar() but do match this ItemExpression.
+	 * @param inventory The inventory items will be removed from.
+	 * @param amount The number of items to remove. If this is -1, all items that match will be removed.
+	 * @return If there were enough items to remove. If this is false, no items have been removed from the inventory.
+	 */
+	public boolean removeFromInventory(Inventory inventory, int amount) {
+		// store the amount matcher, because it'll mess with things later
+		// for exacple, what happens when amount=1 was passed into this function but amount: 64 is in the config?
+		AmountMatcher amountMatcher1 = getAmount();
+		setAmount(new AnyAmount());
+
+		try {
+			int runningAmount = amount;
+			boolean infinite = false;
+			if (runningAmount == -1) {
+				runningAmount = Integer.MAX_VALUE;
+				infinite = true;
+			}
+
+			ItemStack[] contents = inventory.getStorageContents();
+			contents = Arrays.stream(contents).map(item -> item != null ? item.clone() : null).toArray(ItemStack[]::new);
+			for (ItemStack item : contents) {
+				if (item == null)
+					continue;
+				if (item.getType() == Material.AIR)
+					continue;
+
+				if (matches(item)) {
+					if (item.getAmount() >= runningAmount) {
+						int itemOldAmount = item.getAmount();
+						item.setAmount(item.getAmount() - runningAmount);
+						runningAmount -= itemOldAmount - item.getAmount();
+						break;
+					} else if (item.getAmount() < runningAmount) {
+						runningAmount -= item.getAmount();
+						item.setAmount(0);
+					}
+				}
+			}
+
+			if (runningAmount == 0 || infinite) {
+				inventory.setStorageContents(contents);
+				return true;
+			} else if (runningAmount < 0) {
+				// big trouble, this isn't supposed to happen
+				throw new AssertionError("runningAmount is less than 0, there's a bug somewhere. runningAmount: " + runningAmount);
+			} else {
+				// items remaining
+				return false;
+			}
+		} finally {
+			// restore the amount matcher now we're done
+			setAmount(amountMatcher1);
+		}
+	}
+
+	/**
+	 * Removes the items that match this ItemExpression. The amount to remove is infered from the amount of this
+	 * ItemExpression.
+	 *
+	 * If amount is `any`, all items that match this ItemExpression will be removed.
+	 * If amount is a range and random is true, a random number of items within the range will be removed.
+	 * If amount is a range and random is false, the lower bound of the range will be used.
+	 * @param inventory The inventory items will be removed from.
+	 * @param random To select a random number within amount. This only applies if amount is a range.
+	 * @return If there were enough items to remove. If this is false, no items have been removed from the inventory.
+	 */
+	public boolean removeFromInventory(Inventory inventory, boolean random) {
+		int amount;
+		if (amountMatcher instanceof ExactlyAmount) {
+			amount = ((ExactlyAmount) amountMatcher).amount;
+		} else if (amountMatcher instanceof AnyAmount) {
+			amount = -1;
+		} else if (amountMatcher instanceof RangeAmount && !random) {
+			RangeAmount rangeAmount = (RangeAmount) amountMatcher;
+			amount = rangeAmount.getLow() + (rangeAmount.lowInclusive ? 0 : 1);
+		} else if (amountMatcher instanceof RangeAmount && random) {
+			RangeAmount rangeAmount = (RangeAmount) amountMatcher;
+			amount = ThreadLocalRandom.current()
+					.nextInt(rangeAmount.getLow() + (rangeAmount.lowInclusive ? 0 : -1),
+							rangeAmount.getHigh() + (rangeAmount.highInclusive ? 1 : 0));
+		} else {
+			throw new IllegalArgumentException("removeFromInventory(Inventory, boolean) does not work with custom AmountMatchers");
+		}
+
+		return removeFromInventory(inventory, amount);
 	}
 
 	/**
