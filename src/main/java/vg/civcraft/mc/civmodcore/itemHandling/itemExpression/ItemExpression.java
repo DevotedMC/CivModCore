@@ -1,6 +1,7 @@
 package vg.civcraft.mc.civmodcore.itemHandling.itemExpression;
 
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.Inventory;
@@ -130,7 +131,7 @@ public class ItemExpression {
 		ArrayList<EnchantmentMatcher> enchantmentMatcher = new ArrayList<>();
 		for (String enchantName : enchantments.getKeys(false)) {
 			enchantmentMatcher.add(
-					new ExactlyEnchantment(Enchantment.getByName(enchantName),
+					new ExactlyEnchantment(Enchantment.getByKey(NamespacedKey.minecraft(enchantName.toLowerCase())),
 							parseAmount(config, path + "." + enchantName)));
 		}
 
