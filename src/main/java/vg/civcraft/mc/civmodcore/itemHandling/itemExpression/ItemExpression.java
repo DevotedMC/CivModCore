@@ -8,11 +8,13 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enchantment.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.lore.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.name.*;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.uuid.*;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -58,6 +60,7 @@ public class ItemExpression {
 		setEnchantmentHeldAny(parseEnchantment(config, "enchantmentsHeldAny"));
 		setEnchantmentHeldAll(parseEnchantment(config, "enchantmentsHeldAll"));
 		setEnchantmentHeldNone(parseEnchantment(config, "enchantmentsHeldNone"));
+		setSkullMatchers(parseSkull(config, "skull"));
 
 		if (config.contains("unbreakable"))
 			unbreakable = config.getBoolean("unbreakable");
@@ -138,6 +141,28 @@ public class ItemExpression {
 		return new EnchantmentSetMatcher(enchantmentMatcher);
 	}
 
+	private List<UUIDMatcher> parseSkull(ConfigurationSection config, String path) {
+		List<UUIDMatcher> matchers = new ArrayList<>();
+		ConfigurationSection skull = config.getConfigurationSection(path);
+		if (skull == null)
+			return Collections.emptyList();
+
+		for (String name : skull.getStringList("names")) {
+			matchers.add(new PlayerNameUUID(name));
+		}
+
+		for (String uuid : skull.getStringList("uuids")) {
+			matchers.add(new ExactlyUUID(UUID.fromString(uuid)));
+		}
+
+		if (skull.contains("name"))
+			matchers.add(new PlayerNameUUID(skull.getString("name")));
+		if (skull.contains("uuid"))
+			matchers.add(new ExactlyUUID(UUID.fromString(skull.getString("name"))));
+
+		return matchers;
+	}
+
 	/**
 	 * Runs this ItemExpression on a given ItemStack.
 	 *
@@ -152,6 +177,8 @@ public class ItemExpression {
 		} else {
 			meta = new ItemStack(Material.IRON_AXE, 1).getItemMeta(); // clever hack
 		}
+
+		System.out.println(item.getItemMeta() instanceof  SkullMeta);
 
 		if (!materialMatcher.matches(item.getType()))
 			return false;
@@ -177,6 +204,8 @@ public class ItemExpression {
 			return false;
 		else if (enchantmentMatcherHeldNone.matches(castOrNull(meta), false))
 			return false;
+		else if (!skullMatches(meta))
+			return false;
 		return true;
 	}
 
@@ -186,6 +215,16 @@ public class ItemExpression {
 		if (result == null)
 			result = new HashMap<>();
 		return result;
+	}
+
+	private boolean skullMatches(ItemMeta meta) {
+		UUID uuid;
+		if (!(meta instanceof SkullMeta) || !((SkullMeta) meta).hasOwner())
+			uuid = new UUID(0, 0);
+		else
+			uuid = ((SkullMeta) meta).getOwningPlayer().getUniqueId();
+
+		return skullMatchers.stream().anyMatch((matcher) -> matcher.matches(uuid));
 	}
 
 	/**
@@ -421,6 +460,14 @@ public class ItemExpression {
 		if (durabilityMatcher == null)
 			return;
 		this.durabilityMatcher = durabilityMatcher;
+	}
+
+	public List<UUIDMatcher> skullMatchers = Collections.singletonList(new AnyUUID());
+
+	public void setSkullMatchers(List<UUIDMatcher> matchers) {
+		if (matchers == null || matchers.isEmpty())
+			return;
+		skullMatchers = matchers;
 	}
 
 	public class EnchantmentSetMatcher {
