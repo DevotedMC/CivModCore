@@ -236,8 +236,6 @@ public class ItemExpression {
 			meta = new ItemStack(Material.IRON_AXE, 1).getItemMeta(); // clever hack
 		}
 
-		System.out.println(item.getItemMeta() instanceof  SkullMeta);
-
 		if (!materialMatcher.matches(item.getType()))
 			return false;
 		else if (!amountMatcher.matches(item.getAmount()))
