@@ -19,6 +19,7 @@ import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.uuid.*;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * A unified syntax for matching any ItemStack for things like the material, amount, lore contents, and more.
@@ -41,6 +42,63 @@ public class ItemExpression {
 	 */
 	public ItemExpression(ConfigurationSection configurationSection) {
 		parseConfig(configurationSection);
+	}
+
+	/**
+	 * Creates an ItemExpression that matches exactly the passed ItemStack, and no other item.
+	 *
+	 * Note that because of how ItemExpression is implemented, if ItemExpression does not support matching an element
+	 * of an item, this will accept any item with that element. For example, if ItemExpression did not support
+	 * matching the player on a player skull (it supports it), this constructor would return an ItemExpression
+	 * that matched any player head even when passed a player head with a specific name.
+	 * @param item The ItemStack that this ItemExpression would exactly match.
+	 */
+	public ItemExpression(ItemStack item) {
+		this(item, false);
+	}
+
+	/**
+	 * Creates an ItemExpression that matches exactly the passed ItemStack, or acts equilivent to ItemStack.isSimilar().
+	 *
+	 * See also ItemExpression(ItemStack).
+	 * @param item The item that this ItemExpression would match.
+	 * @param acceptSimilar If this ItemExpression should act similar to ItemStack.isSimilar().
+	 */
+	public ItemExpression(ItemStack item, boolean acceptSimilar) {
+		setMaterial(new ExactlyMaterial(item.getType()));
+		if (acceptSimilar)
+			setAmount(new AnyAmount());
+		else
+			setAmount(new ExactlyAmount(item.getAmount()));
+		setDurability(new ExactlyAmount(item.getDurability()));
+		if (item.hasItemMeta() && item.getItemMeta().hasLore())
+			setLore(new ExactlyLore(item.getItemMeta().getLore()));
+		else
+			setLore(new ExactlyLore(new ArrayList<>()));
+		if (item.hasItemMeta() && item.getItemMeta().hasDisplayName())
+			setName(new ExactlyName(item.getItemMeta().getDisplayName()));
+		else
+			setName(new VanillaName());
+		if (item.hasItemMeta() && item.getItemMeta().hasEnchants())
+			setEnchantmentAll(exactlyEnchantments(item.getEnchantments()));
+		else
+			setEnchantmentAll(new EnchantmentSetMatcher(Collections.singletonList(new NoEnchantment())));
+		if (item.getItemMeta() instanceof EnchantmentStorageMeta)
+			setEnchantmentHeldAll(exactlyEnchantments(((EnchantmentStorageMeta) item.getItemMeta()).getStoredEnchants()));
+		else
+			setEnchantmentHeldAll(new EnchantmentSetMatcher(Collections.singletonList(new NoEnchantment())));
+		if (item.getItemMeta() instanceof SkullMeta)
+			setSkullMatchers(Collections.singletonList(new ExactlyUUID(((SkullMeta) item.getItemMeta()).getOwningPlayer().getUniqueId())));
+		else
+			setSkullMatchers(Collections.singletonList(new ExactlyUUID(new UUID(0, 0))));
+	}
+
+	private EnchantmentSetMatcher exactlyEnchantments(Map<Enchantment, Integer> enchantments) {
+		return new EnchantmentSetMatcher(enchantments.entrySet().stream().map((kv) -> {
+			Enchantment enchantment = kv.getKey();
+			int level = kv.getValue();
+			return new ExactlyEnchantment(enchantment, new ExactlyAmount(level));
+		}).collect(Collectors.toList()));
 	}
 
 	/**
