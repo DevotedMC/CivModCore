@@ -6,20 +6,26 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enchantment.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.lore.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.*;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc.ItemUnbreakableMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.name.*;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc.ItemSkullMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.uuid.*;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enchantment.EnchantmentsSource.HELD;
+import static vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enchantment.EnchantmentsSource.ITEM;
+import static vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enchantment.ItemEnchantmentsMatcher.Mode.*;
 
 /**
  * A unified syntax for matching any ItemStack for things like the material, amount, lore contents, and more.
@@ -65,40 +71,47 @@ public class ItemExpression {
 	 * @param acceptSimilar If this ItemExpression should act similar to ItemStack.isSimilar().
 	 */
 	public ItemExpression(ItemStack item, boolean acceptSimilar) {
-		setMaterial(new ExactlyMaterial(item.getType()));
-		if (acceptSimilar)
-			setAmount(new AnyAmount());
-		else
-			setAmount(new ExactlyAmount(item.getAmount()));
-		setDurability(new ExactlyAmount(item.getDurability()));
-		if (item.hasItemMeta() && item.getItemMeta().hasLore())
-			setLore(new ExactlyLore(item.getItemMeta().getLore()));
-		else
-			setLore(new ExactlyLore(new ArrayList<>()));
-		if (item.hasItemMeta() && item.getItemMeta().hasDisplayName())
-			setName(new ExactlyName(item.getItemMeta().getDisplayName()));
-		else
-			setName(new VanillaName());
-		if (item.hasItemMeta() && item.getItemMeta().hasEnchants())
-			setEnchantmentAll(exactlyEnchantments(item.getEnchantments()));
-		else
-			setEnchantmentAll(new EnchantmentSetMatcher(Collections.singletonList(new NoEnchantment())));
-		if (item.getItemMeta() instanceof EnchantmentStorageMeta)
-			setEnchantmentHeldAll(exactlyEnchantments(((EnchantmentStorageMeta) item.getItemMeta()).getStoredEnchants()));
-		else
-			setEnchantmentHeldAll(new EnchantmentSetMatcher(Collections.singletonList(new NoEnchantment())));
-		if (item.getItemMeta() instanceof SkullMeta)
-			setSkullMatchers(Collections.singletonList(new ExactlyUUID(((SkullMeta) item.getItemMeta()).getOwningPlayer().getUniqueId())));
-		else
-			setSkullMatchers(Collections.singletonList(new ExactlyUUID(new UUID(0, 0))));
-	}
+		// material
+		addMatcher(new ItemMaterialMatcher(new ExactlyMaterial(item.getType())));
 
-	private EnchantmentSetMatcher exactlyEnchantments(Map<Enchantment, Integer> enchantments) {
-		return new EnchantmentSetMatcher(enchantments.entrySet().stream().map((kv) -> {
-			Enchantment enchantment = kv.getKey();
-			int level = kv.getValue();
-			return new ExactlyEnchantment(enchantment, new ExactlyAmount(level));
-		}).collect(Collectors.toList()));
+		// amount
+		if (!acceptSimilar)
+			addMatcher(new ItemAmountMatcher(new ExactlyAmount(item.getAmount())));
+
+		// stop here if there isn't any itemmeta, so not every other matcher needs to check
+		if (!item.hasItemMeta())
+			return;
+
+		// durability
+		if (item.getItemMeta() instanceof Damageable)
+			addMatcher(new ItemDurabilityMatcher(new ExactlyAmount(((Damageable) item.getItemMeta()).getDamage())));
+
+		// lore
+		addMatcher(new ItemLoreMatcher(new ExactlyLore(item.getItemMeta().getLore())));
+
+		// name
+		if (item.getItemMeta().hasDisplayName())
+			addMatcher(new ItemNameMatcher(new ExactlyName(item.getItemMeta().getDisplayName())));
+		else
+			addMatcher(new ItemNameMatcher(new VanillaName()));
+
+		// enchantments
+		addMatcher(new ItemExactlyEnchantmentsMatcher(item.getEnchantments(), ITEM));
+
+		// enchantments held like an enchanted book
+		if (item.getItemMeta() instanceof EnchantmentStorageMeta)
+			addMatcher(new ItemExactlyEnchantmentsMatcher(((EnchantmentStorageMeta) item.getItemMeta()).getStoredEnchants(), HELD));
+		else
+			addMatcher(new ItemZeroEnchantsMatcher(HELD));
+
+		// skulls
+		if (item.getItemMeta() instanceof SkullMeta && ((SkullMeta) item.getItemMeta()).hasOwner())
+			addMatcher(new ItemSkullMatcher(Collections.singletonList(new ExactlyUUID(((SkullMeta) item.getItemMeta()).getOwningPlayer().getUniqueId()))));
+		else if (item.getItemMeta() instanceof SkullMeta && !((SkullMeta) item.getItemMeta()).hasOwner())
+			addMatcher(new ItemSkullMatcher(Collections.singletonList(new ExactlyUUID(new UUID(0, 0)))));
+
+		// unbreakable
+		addMatcher(new ItemUnbreakableMatcher(item.getItemMeta().isUnbreakable()));
 	}
 
 	/**
@@ -107,23 +120,18 @@ public class ItemExpression {
 	 * @param config The config that options will be taken from.
 	 */
 	public void parseConfig(ConfigurationSection config) {
-		setMaterial(parseMaterial(config, "material"));
-		setAmount(parseAmount(config, "amount"));
-		setDurability(parseAmount(config, "durability"));
-		setLore(parseLore(config, "lore"));
-		setName(parseName(config, "name"));
-		setEnchantmentAny(parseEnchantment(config, "enchantmentsAny"));
-		setEnchantmentAll(parseEnchantment(config, "enchantmentsAll"));
-		setEnchantmentNone(parseEnchantment(config, "enchantmentsNone"));
-		setEnchantmentHeldAny(parseEnchantment(config, "enchantmentsHeldAny"));
-		setEnchantmentHeldAll(parseEnchantment(config, "enchantmentsHeldAll"));
-		setEnchantmentHeldNone(parseEnchantment(config, "enchantmentsHeldNone"));
-		setSkullMatchers(parseSkull(config, "skull"));
-
-		if (config.contains("unbreakable"))
-			unbreakable = config.getBoolean("unbreakable");
-		else
-			unbreakable = null;
+		addMatcher(new ItemMaterialMatcher(parseMaterial(config, "material")));
+		addMatcher(new ItemAmountMatcher(parseAmount(config, "amound")));
+		addMatcher(new ItemDurabilityMatcher(parseAmount(config, "durability")));
+		addMatcher(new ItemLoreMatcher(parseLore(config, "lore")));
+		addMatcher(new ItemNameMatcher(parseName(config, "name")));
+		addMatcher(parseEnchantment(config, "enchantmentsAny", ANY, ITEM));
+		addMatcher(parseEnchantment(config, "enchantmentsAll", ALL, ITEM));
+		addMatcher(parseEnchantment(config, "enchantmentsNone", NONE, ITEM));
+		addMatcher(parseEnchantment(config, "enchantmentsHeldAny", ANY, HELD));
+		addMatcher(parseEnchantment(config, "enchantmentsHeldAll", ALL, HELD));
+		addMatcher(parseEnchantment(config, "enchantmentsHeldNone", NONE, HELD));
+		addMatcher(new ItemSkullMatcher(parseSkull(config, "skull")));
 	}
 
 	/**
@@ -184,7 +192,9 @@ public class ItemExpression {
 		return null;
 	}
 
-	private EnchantmentSetMatcher parseEnchantment(ConfigurationSection config, String path) {
+	private ItemEnchantmentsMatcher parseEnchantment(ConfigurationSection config, String path,
+													 ItemEnchantmentsMatcher.Mode mode,
+													 EnchantmentsSource source) {
 		ConfigurationSection enchantments = config.getConfigurationSection(path);
 		if (enchantments == null)
 			return null;
@@ -196,7 +206,7 @@ public class ItemExpression {
 							parseAmount(config, path + "." + enchantName)));
 		}
 
-		return new EnchantmentSetMatcher(enchantmentMatcher);
+		return new ItemEnchantmentsMatcher(enchantmentMatcher, mode, source);
 	}
 
 	private List<UUIDMatcher> parseSkull(ConfigurationSection config, String path) {
@@ -229,58 +239,7 @@ public class ItemExpression {
 	 * @return If the given item matches.
 	 */
 	public boolean matches(ItemStack item) {
-		ItemMeta meta;
-		if (item.hasItemMeta()) {
-			meta = item.getItemMeta();
-		} else {
-			meta = new ItemStack(Material.IRON_AXE, 1).getItemMeta(); // clever hack
-		}
-
-		if (!materialMatcher.matches(item.getType()))
-			return false;
-		else if (!amountMatcher.matches(item.getAmount()))
-			return false;
-		else if (!durabilityMatcher.matches(item.getDurability()))
-			return false;
-		else if (!loreMatcher.matches(meta.getLore()))
-			return false;
-		else if (!nameMatcher.matches(meta.getDisplayName()))
-			return false;
-		else if (!enchantmentMatcherAny.matches(item.getEnchantments(), true))
-			return false;
-		else if (!enchantmentMatcherAll.matches(item.getEnchantments(), false))
-			return false;
-		else if (enchantmentMatcherNone.matches(item.getEnchantments(), false))
-			return false;
-		else if (unbreakable != null && meta.isUnbreakable() != unbreakable)
-			return false;
-		else if (!enchantmentMatcherHeldAny.matches(castOrNull(meta), true))
-			return false;
-		else if (!enchantmentMatcherHeldAll.matches(castOrNull(meta), false))
-			return false;
-		else if (enchantmentMatcherHeldNone.matches(castOrNull(meta), false))
-			return false;
-		else if (!skullMatches(meta))
-			return false;
-		return true;
-	}
-
-	private Map<Enchantment, Integer> castOrNull(ItemMeta itemMeta) {
-		Map<Enchantment, Integer> result = (itemMeta instanceof EnchantmentStorageMeta) ?
-				((EnchantmentStorageMeta) itemMeta).getStoredEnchants() : null;
-		if (result == null)
-			result = new HashMap<>();
-		return result;
-	}
-
-	private boolean skullMatches(ItemMeta meta) {
-		UUID uuid;
-		if (!(meta instanceof SkullMeta) || !((SkullMeta) meta).hasOwner())
-			uuid = new UUID(0, 0);
-		else
-			uuid = ((SkullMeta) meta).getOwningPlayer().getUniqueId();
-
-		return skullMatchers.stream().anyMatch((matcher) -> matcher.matches(uuid));
+		return matchers.stream().allMatch((matcher) -> matcher.matches(item));
 	}
 
 	/**
@@ -293,10 +252,12 @@ public class ItemExpression {
 	 * @return If there were enough items to remove. If this is false, no items have been removed from the inventory.
 	 */
 	public boolean removeFromInventory(Inventory inventory, int amount) {
-		// store the amount matcher, because it'll mess with things later
+		// store the amount matchers, because it'll mess with things later
 		// for exacple, what happens when amount=1 was passed into this function but amount: 64 is in the config?
-		AmountMatcher amountMatcher1 = getAmount();
-		setAmount(new AnyAmount());
+		List<ItemMatcher> amountMatchers = matchers.stream().filter((m) -> m instanceof ItemAmountMatcher).collect(Collectors.toList());
+		for (ItemMatcher m : amountMatchers) {
+			matchers.remove(m);
+		}
 
 		try {
 			int runningAmount = amount;
@@ -338,8 +299,8 @@ public class ItemExpression {
 				return false;
 			}
 		} finally {
-			// restore the amount matcher now we're done
-			setAmount(amountMatcher1);
+			// restore the amount matchers now we're done
+			amountMatchers.forEach(this::addMatcher);
 		}
 	}
 
@@ -356,6 +317,21 @@ public class ItemExpression {
 	 */
 	public boolean removeFromInventory(Inventory inventory, boolean random) {
 		int amount;
+		List<ItemAmountMatcher> amountMatchers = matchers.stream()
+				.filter((m) -> m instanceof ItemAmountMatcher)
+				.map((m) -> (ItemAmountMatcher) m)
+				.collect(Collectors.toList());
+
+		AmountMatcher amountMatcher;
+		if (amountMatchers.size() > 1)
+			throw new IllegalStateException("Can't infer the amount from an ItemExpression with multiple " +
+					"ItemAmountMatchers.");
+		else if (amountMatchers.size() == 1)
+			amountMatcher = amountMatchers.get(0).matcher;
+		else {
+			amountMatcher = new AnyAmount();
+		}
+
 		if (amountMatcher instanceof ExactlyAmount) {
 			amount = ((ExactlyAmount) amountMatcher).amount;
 		} else if (amountMatcher instanceof AnyAmount) {
@@ -376,193 +352,19 @@ public class ItemExpression {
 	}
 
 	/**
-	 * null if matches unbreakable == true and unbreakable == false
+	 * Add a property of the item to be checked, using an ItemMatcher.
+	 * @param matcher The ItemMatcher to be added to the list that will be checked aganst each item inside
+	 *                ItemExpression.matches(ItemStack). If this is null, this function will do nothing.
 	 */
-	public Boolean unbreakable = null;
-
-	private MaterialMatcher materialMatcher = new AnyMaterial();
-
-	public MaterialMatcher getMaterial() {
-		return materialMatcher;
+	public void addMatcher(ItemMatcher matcher) {
+		if (matcher != null)
+			matchers.add(matcher);
 	}
 
-	public void setMaterial(MaterialMatcher materialMatcher) {
-		if (materialMatcher == null)
-			return;
-		this.materialMatcher = materialMatcher;
-	}
-
-	private AmountMatcher amountMatcher = new AnyAmount();
-
-	public AmountMatcher getAmount() {
-		return amountMatcher;
-	}
-
-	public void setAmount(AmountMatcher amountMatcher) {
-		if (amountMatcher == null)
-            return;
-		this.amountMatcher = amountMatcher;
-	}
-
-	private LoreMatcher loreMatcher = new AnyLore();
-
-	public LoreMatcher getLore() {
-		return loreMatcher;
-	}
-
-	public void setLore(LoreMatcher loreMatcher) {
-		if (loreMatcher == null)
-            return;
-		this.loreMatcher = loreMatcher;
-	}
-
-	private NameMatcher nameMatcher = new AnyName();
-
-	public NameMatcher getName() {
-		return nameMatcher;
-	}
-
-	public void setName(NameMatcher nameMatcher) {
-		if (nameMatcher == null)
-            return;
-		this.nameMatcher = nameMatcher;
-	}
-
-	private EnchantmentSetMatcher enchantmentMatcherAny =
-			new EnchantmentSetMatcher(Collections.singletonList(new AnyEnchantment()));
-
-	public EnchantmentSetMatcher getEnchantmentAny() {
-		return enchantmentMatcherAny;
-	}
-
-	public void setEnchantmentAny(EnchantmentSetMatcher enchantmentMatcher) {
-		if (enchantmentMatcher == null)
-			return;
-		this.enchantmentMatcherAny = enchantmentMatcher;
-	}
-
-	private EnchantmentSetMatcher enchantmentMatcherAll =
-			new EnchantmentSetMatcher(Collections.singletonList(new AnyEnchantment()));
-
-	public EnchantmentSetMatcher getEnchantmentAll() {
-		return enchantmentMatcherAll;
-	}
-
-	public void setEnchantmentAll(EnchantmentSetMatcher enchantmentMatcherAll) {
-		if (enchantmentMatcherAll == null)
-			return;
-		this.enchantmentMatcherAll = enchantmentMatcherAll;
-	}
-
-	private EnchantmentSetMatcher enchantmentMatcherNone =
-			new EnchantmentSetMatcher(Collections.singletonList(new NoEnchantment()));
-
-	public EnchantmentSetMatcher getEnchantmentNone() {
-		return enchantmentMatcherNone;
-	}
-
-	public void setEnchantmentNone(EnchantmentSetMatcher getEnchantmentMatcherNone) {
-		if (getEnchantmentMatcherNone == null)
-			return;
-		this.enchantmentMatcherNone = getEnchantmentMatcherNone;
-	}
-
-	public EnchantmentSetMatcher getEnchantmentHeldAny() {
-		return enchantmentMatcherHeldAny;
-	}
-
-	public void setEnchantmentHeldAny(EnchantmentSetMatcher enchantmentMatcherHeldAny) {
-		if (enchantmentMatcherHeldAny == null)
-			return;
-		this.enchantmentMatcherHeldAny = enchantmentMatcherHeldAny;
-	}
-
-	public EnchantmentSetMatcher getEnchantmentHeldAll() {
-		return enchantmentMatcherHeldAll;
-	}
-
-	public void setEnchantmentHeldAll(EnchantmentSetMatcher enchantmentMatcherHeldAll) {
-		if (enchantmentMatcherHeldAll == null)
-			return;
-		this.enchantmentMatcherHeldAll = enchantmentMatcherHeldAll;
-	}
-
-	public EnchantmentSetMatcher getEnchantmentHeldNone() {
-		return enchantmentMatcherHeldNone;
-	}
-
-	public void setEnchantmentHeldNone(EnchantmentSetMatcher enchantmentMatcherHeldNone) {
-		if (enchantmentMatcherHeldNone == null)
-			return;
-		this.enchantmentMatcherHeldNone = enchantmentMatcherHeldNone;
-	}
-
-	private EnchantmentSetMatcher enchantmentMatcherHeldAny =
-			new EnchantmentSetMatcher(Collections.singletonList(new AnyEnchantment()));
-
-	private EnchantmentSetMatcher enchantmentMatcherHeldAll =
-			new EnchantmentSetMatcher(Collections.singletonList(new AnyEnchantment()));
-
-	private EnchantmentSetMatcher enchantmentMatcherHeldNone =
-			new EnchantmentSetMatcher(Collections.singletonList(new NoEnchantment()));
-
-	private AmountMatcher durabilityMatcher = new AnyAmount();
-
-	public AmountMatcher getDurability() {
-		return durabilityMatcher;
-	}
-
-	public void setDurability(AmountMatcher durabilityMatcher) {
-		if (durabilityMatcher == null)
-			return;
-		this.durabilityMatcher = durabilityMatcher;
-	}
-
-	public List<UUIDMatcher> skullMatchers = Collections.singletonList(new AnyUUID());
-
-	public void setSkullMatchers(List<UUIDMatcher> matchers) {
-		if (matchers == null || matchers.isEmpty())
-			return;
-		skullMatchers = matchers;
-	}
-
-	public class EnchantmentSetMatcher {
-		public EnchantmentSetMatcher(List<EnchantmentMatcher> enchantmentMatchers) {
-			this.enchantmentMatchers = enchantmentMatchers;
-		}
-
-		public List<EnchantmentMatcher> enchantmentMatchers;
-
-		public boolean matches(Map<Enchantment, Integer> enchantments, boolean isAny) {
-			if (matchesAny() && enchantments.size() == 0)
-				return true;
-
-			for (EnchantmentMatcher matcher : enchantmentMatchers) {
-				boolean matchedOne = false;
-
-				for (Map.Entry<Enchantment, Integer> entry : enchantments.entrySet()) {
-					Enchantment enchantment = entry.getKey();
-					int level = entry.getValue();
-
-					if (matcher.matches(enchantment, level)) {
-						matchedOne = true;
-						if (isAny)
-							return true;
-					}
-				}
-
-				if (!isAny && !matchedOne)
-					return false;
-			}
-
-			if (!isAny)
-				return true;
-			else
-				return false;
-		}
-
-		public boolean matchesAny() {
-			return enchantmentMatchers.size() == 1 && enchantmentMatchers.get(0) instanceof AnyEnchantment;
-		}
-	}
+	/**
+	 * All of the matchers in this set must return true in order for this ItemExpression to match a given item.
+	 *
+	 * This is the only data structure holding ItemMatchers in this ItemExpression, so it is fine to mutate this field.
+	 */
+	public HashSet<ItemMatcher> matchers = new HashSet<>();
 }
