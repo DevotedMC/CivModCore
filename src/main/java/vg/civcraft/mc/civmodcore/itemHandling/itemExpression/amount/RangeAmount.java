@@ -1,9 +1,17 @@
 package vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount;
 
 /**
+ * Accepts an amount between high and low. Also allows selecting if the range should include high and low.
+ *
  * @author Ameliorate
  */
 public class RangeAmount implements AmountMatcher {
+	/**
+	 * @param low The lowest number that this range should accept.
+	 * @param high The highest number that this range should accpet.
+	 * @param lowInclusive If this range should accept values equal to low.
+	 * @param highInclusive If this range should accept values equal to high.
+	 */
 	public RangeAmount(int low, int high, boolean lowInclusive, boolean highInclusive) {
 		set(low, high);
 		this.highInclusive = highInclusive;
