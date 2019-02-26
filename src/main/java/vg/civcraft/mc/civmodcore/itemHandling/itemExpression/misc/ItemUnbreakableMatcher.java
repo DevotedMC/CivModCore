@@ -15,7 +15,8 @@ public class ItemUnbreakableMatcher implements ItemMatcher {
 
 	@Override
 	public boolean matches(ItemStack item) {
-		if (!item.hasItemMeta())
+		if (!item.hasItemMeta() && unbreakable)
+			// an item without metadata can not be unbreakable
 			return false;
 		return item.getItemMeta().isUnbreakable() == unbreakable;
 	}

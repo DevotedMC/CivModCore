@@ -21,6 +21,9 @@ public class ItemEnchantmentsMatcher implements ItemMatcher {
 	}
 
 	public ItemEnchantmentsMatcher(List<EnchantmentMatcher> enchantmentMatchers, Mode mode, EnchantmentsSource source) {
+		if (enchantmentMatchers.isEmpty())
+			throw new IllegalArgumentException("enchanmentMatchers can not be empty. If an empty enchantmentMatchers " +
+					"was allowed, it would cause many subtle logic errors.");
 		this.enchantmentMatchers = enchantmentMatchers;
 		this.mode = mode;
 		this.source = source;
