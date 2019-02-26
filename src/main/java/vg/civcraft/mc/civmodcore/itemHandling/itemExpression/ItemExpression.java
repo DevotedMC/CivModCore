@@ -87,7 +87,8 @@ public class ItemExpression {
 			addMatcher(new ItemDurabilityMatcher(new ExactlyAmount(((Damageable) item.getItemMeta()).getDamage())));
 
 		// lore
-		addMatcher(new ItemLoreMatcher(new ExactlyLore(item.getItemMeta().getLore())));
+		addMatcher(new ItemLoreMatcher(new ExactlyLore(item.getItemMeta().hasLore() ?
+				item.getItemMeta().getLore() : Collections.emptyList())));
 
 		// name
 		if (item.getItemMeta().hasDisplayName())

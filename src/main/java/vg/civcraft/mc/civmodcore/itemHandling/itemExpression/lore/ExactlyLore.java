@@ -1,5 +1,6 @@
 package vg.civcraft.mc.civmodcore.itemHandling.itemExpression.lore;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -7,6 +8,8 @@ import java.util.List;
  */
 public class ExactlyLore implements LoreMatcher {
 	public ExactlyLore(List<String> lore) {
+		if (lore == null)
+			lore = Collections.emptyList();
 		this.lore = lore;
 	}
 
