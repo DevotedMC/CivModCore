@@ -5,6 +5,9 @@ import org.bukkit.OfflinePlayer;
 
 import java.util.UUID;
 
+/**
+ * @author Ameliorate
+ */
 public class PlayerNameUUID implements UUIDMatcher {
 	public PlayerNameUUID(String name) {
 		this.name = name;

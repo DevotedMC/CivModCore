@@ -6,6 +6,9 @@ import org.bukkit.OfflinePlayer;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+/**
+ * @author Ameliorate
+ */
 public class PlayerNameRegexUUID implements UUIDMatcher {
 	public PlayerNameRegexUUID(Pattern pattern) {
 		this.pattern = pattern;
