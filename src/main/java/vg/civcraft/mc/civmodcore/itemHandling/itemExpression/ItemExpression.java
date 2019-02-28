@@ -149,6 +149,7 @@ public class ItemExpression {
 		addMatcher(parseEnchantment(config, "enchantmentsHeldNone", NONE, HELD));
 		addMatcher(new ItemSkullMatcher(parseSkull(config, "skull")));
 		parseFlags(config, "flags").forEach(this::addMatcher);
+		addMatcher(parseUnbreakable(config, "unbreakable"));
 	}
 
 	/**
@@ -266,6 +267,13 @@ public class ItemExpression {
 		}
 
 		return matchers;
+	}
+
+	private ItemUnbreakableMatcher parseUnbreakable(ConfigurationSection config, String path) {
+		if (!config.contains(path))
+			return null;
+		boolean unbreakable = config.getBoolean(path);
+		return new ItemUnbreakableMatcher(unbreakable);
 	}
 
 	/**
