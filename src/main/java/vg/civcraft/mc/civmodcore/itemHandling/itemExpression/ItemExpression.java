@@ -123,7 +123,7 @@ public class ItemExpression {
 	 */
 	public void parseConfig(ConfigurationSection config) {
 		addMatcher(new ItemMaterialMatcher(parseMaterial(config, "material")));
-		addMatcher(new ItemAmountMatcher(parseAmount(config, "amound")));
+		addMatcher(new ItemAmountMatcher(parseAmount(config, "amount")));
 		addMatcher(new ItemDurabilityMatcher(parseAmount(config, "durability")));
 		addMatcher(new ItemLoreMatcher(parseLore(config, "lore")));
 		addMatcher(new ItemNameMatcher(parseName(config, "name")));
