@@ -230,6 +230,9 @@ public class ItemExpression {
 		if (skull.contains("uuid"))
 			matchers.add(new ExactlyUUID(UUID.fromString(skull.getString("name"))));
 
+		if (skull.contains("regex"))
+			matchers.add(new PlayerNameRegexUUID(Pattern.compile(skull.getString("regex"))));
+
 		return matchers;
 	}
 
