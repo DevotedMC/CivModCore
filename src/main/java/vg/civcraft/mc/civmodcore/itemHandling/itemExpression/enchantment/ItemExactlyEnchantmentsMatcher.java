@@ -39,8 +39,10 @@ public class ItemExactlyEnchantmentsMatcher implements ItemMatcher {
 				else
 					itemEnchantments = ((EnchantmentStorageMeta) item.getItemMeta()).getStoredEnchants();
 				break;
+			default:
+				throw new AssertionError("not reachable");
 		}
 
-		return item.getEnchantments().equals(enchantments);
+		return itemEnchantments.equals(enchantments);
 	}
 }
