@@ -5,6 +5,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.Damageable;
@@ -14,6 +15,7 @@ import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enchantment.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.lore.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.*;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc.ItemFlagMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc.ItemUnbreakableMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.name.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc.ItemSkullMatcher;
@@ -114,6 +116,18 @@ public class ItemExpression {
 
 		// unbreakable
 		addMatcher(new ItemUnbreakableMatcher(item.getItemMeta().isUnbreakable()));
+
+		// flags
+		HashSet<ItemFlag> flagsNotSet = new HashSet<>(Arrays.asList(ItemFlag.values()));
+
+		for (ItemFlag flag : item.getItemMeta().getItemFlags()) {
+			addMatcher(new ItemFlagMatcher(flag, true));
+			flagsNotSet.remove(flag);
+		}
+
+		for (ItemFlag flag : flagsNotSet) {
+			addMatcher(new ItemFlagMatcher(flag, false));
+		}
 	}
 
 	/**
@@ -134,6 +148,7 @@ public class ItemExpression {
 		addMatcher(parseEnchantment(config, "enchantmentsHeldAll", ALL, HELD));
 		addMatcher(parseEnchantment(config, "enchantmentsHeldNone", NONE, HELD));
 		addMatcher(new ItemSkullMatcher(parseSkull(config, "skull")));
+		parseFlags(config, "flags").forEach(this::addMatcher);
 	}
 
 	/**
@@ -232,6 +247,23 @@ public class ItemExpression {
 
 		if (skull.contains("regex"))
 			matchers.add(new PlayerNameRegexUUID(Pattern.compile(skull.getString("regex"))));
+
+		return matchers;
+	}
+
+	private List<ItemFlagMatcher> parseFlags(ConfigurationSection config, String path) {
+		List<ItemFlagMatcher> matchers = new ArrayList<>();
+
+		ConfigurationSection flags = config.getConfigurationSection(path);
+		if (flags == null)
+			return Collections.emptyList();
+
+		for (String flagKey : flags.getKeys(false)) {
+			ItemFlag flag = ItemFlag.valueOf(flagKey.toUpperCase());
+			boolean setting = flags.getBoolean(flagKey);
+
+			matchers.add(new ItemFlagMatcher(flag, setting));
+		}
 
 		return matchers;
 	}
