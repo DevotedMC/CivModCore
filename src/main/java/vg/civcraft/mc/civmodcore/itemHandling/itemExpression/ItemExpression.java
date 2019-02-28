@@ -6,6 +6,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.SkullMeta;
@@ -253,6 +254,17 @@ public class ItemExpression {
 	 * @return If there were enough items to remove. If this is false, no items have been removed from the inventory.
 	 */
 	public boolean removeFromInventory(Inventory inventory, int amount) {
+		ItemStack[] contents = inventory.getStorageContents();
+
+		ItemStack[] result = removeFromItemArray(contents, amount);
+		if (result == null)
+			return false;
+
+		inventory.setStorageContents(result);
+		return true;
+	}
+
+	private ItemStack[] removeFromItemArray(ItemStack[] contents, int amount) {
 		// store the amount matchers, because it'll mess with things later
 		// for exacple, what happens when amount=1 was passed into this function but amount: 64 is in the config?
 		List<ItemMatcher> amountMatchers = matchers.stream().filter((m) -> m instanceof ItemAmountMatcher).collect(Collectors.toList());
@@ -268,7 +280,6 @@ public class ItemExpression {
 				infinite = true;
 			}
 
-			ItemStack[] contents = inventory.getStorageContents();
 			contents = Arrays.stream(contents).map(item -> item != null ? item.clone() : null).toArray(ItemStack[]::new);
 			for (ItemStack item : contents) {
 				if (item == null)
@@ -290,14 +301,13 @@ public class ItemExpression {
 			}
 
 			if (runningAmount == 0 || infinite) {
-				inventory.setStorageContents(contents);
-				return true;
+				return contents;
 			} else if (runningAmount < 0) {
 				// big trouble, this isn't supposed to happen
 				throw new AssertionError("runningAmount is less than 0, there's a bug somewhere. runningAmount: " + runningAmount);
 			} else {
 				// items remaining
-				return false;
+				return null;
 			}
 		} finally {
 			// restore the amount matchers now we're done
@@ -317,7 +327,15 @@ public class ItemExpression {
 	 * @return If there were enough items to remove. If this is false, no items have been removed from the inventory.
 	 */
 	public boolean removeFromInventory(Inventory inventory, boolean random) {
-		int amount;
+		return removeFromInventory(inventory, getAmount(random));
+	}
+
+	/**
+	 * Abstraction for the algorithm defined in removeFromInventory's javadoc.
+	 * @param random To select a random number within amount. This only applies if amount is a range.
+	 * @return The amount field of the config format. This is extracted from the structure of this ItemStack, not the config.
+	 */
+	private int getAmount(boolean random) {
 		List<ItemAmountMatcher> amountMatchers = matchers.stream()
 				.filter((m) -> m instanceof ItemAmountMatcher)
 				.map((m) -> (ItemAmountMatcher) m)
@@ -334,22 +352,55 @@ public class ItemExpression {
 		}
 
 		if (amountMatcher instanceof ExactlyAmount) {
-			amount = ((ExactlyAmount) amountMatcher).amount;
+			return ((ExactlyAmount) amountMatcher).amount;
 		} else if (amountMatcher instanceof AnyAmount) {
-			amount = -1;
+			return -1;
 		} else if (amountMatcher instanceof RangeAmount && !random) {
 			RangeAmount rangeAmount = (RangeAmount) amountMatcher;
-			amount = rangeAmount.getLow() + (rangeAmount.lowInclusive ? 0 : 1);
+			return rangeAmount.getLow() + (rangeAmount.lowInclusive ? 0 : 1);
 		} else if (amountMatcher instanceof RangeAmount && random) {
 			RangeAmount rangeAmount = (RangeAmount) amountMatcher;
-			amount = ThreadLocalRandom.current()
+			return ThreadLocalRandom.current()
 					.nextInt(rangeAmount.getLow() + (rangeAmount.lowInclusive ? 0 : -1),
 							rangeAmount.getHigh() + (rangeAmount.highInclusive ? 1 : 0));
 		} else {
 			throw new IllegalArgumentException("removeFromInventory(Inventory, boolean) does not work with custom AmountMatchers");
 		}
+	}
 
-		return removeFromInventory(inventory, amount);
+	/**
+	 * Removes amount items that match this ItemExpression from the main hand or the off hand, prefeing the main hand.
+	 * @param inventory The player's inventory to remove the items from.
+	 * @param amount The number of items to remove. All ItemStacks that match will be removed if this is -1.
+	 * @return If there were enough items to remove. If this is false, no items were removed.
+	 */
+	public boolean removeFromMainHandOrOffHand(PlayerInventory inventory, int amount) {
+		ItemStack[] items = new ItemStack[2];
+		items[0] = inventory.getItemInMainHand();
+		items[1] = inventory.getItemInOffHand();
+
+		ItemStack[] result = removeFromItemArray(items, amount);
+		if (result == null)
+			return false;
+
+		inventory.setItemInMainHand(result[0]);
+		inventory.setItemInOffHand(result[1]);
+		return true;
+	}
+
+	/**
+	 * Removes the items that match this ItemExpression from either the main hand or the oof hand of the player.
+	 * The amount to remove is infered from the amount of this ItemExpression.
+	 *
+	 * If amount is `any`, all items that match this ItemExpression will be removed.
+	 * If amount is a range and random is true, a random number of items within the range will be removed.
+	 * If amount is a range and random is false, the lower bound of the range will be used.
+	 * @param inventory The player inventory to remove the items from.
+	 * @param random To select a random number within amount. This only applies if amount is a range.
+	 * @return If there were enough items to remove. If this is false, no items have been removed from the inventory.
+	 */
+	public boolean removeFromMainHandOrOffHand(PlayerInventory inventory, boolean random) {
+		return removeFromMainHandOrOffHand(inventory, getAmount(random));
 	}
 
 	/**
