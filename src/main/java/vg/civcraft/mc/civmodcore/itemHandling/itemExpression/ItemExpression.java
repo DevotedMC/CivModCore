@@ -307,6 +307,13 @@ public class ItemExpression {
 		return true;
 	}
 
+	/**
+	 * Removes amount items that match this ItemExpression from contents, returning the modified version of contents.
+	 * @param contents The list of items to be matched and possibly removed. This may contain nulls.
+	 *                 The array and the ItemStacks inside will not be mutated.
+	 * @param amount The number of items to remove.
+	 * @return The new list of items will amount removed. If there were not enough items to remove, null will be returned.
+	 */
 	private ItemStack[] removeFromItemArray(ItemStack[] contents, int amount) {
 		// store the amount matchers, because it'll mess with things later
 		// for exacple, what happens when amount=1 was passed into this function but amount: 64 is in the config?
