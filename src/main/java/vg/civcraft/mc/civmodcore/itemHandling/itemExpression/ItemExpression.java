@@ -3,6 +3,7 @@ package vg.civcraft.mc.civmodcore.itemHandling.itemExpression;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.MemoryConfiguration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
@@ -166,6 +167,41 @@ public class ItemExpression {
 		if (!configurationSection.contains(path))
 			return null;
 		return new ItemExpression(configurationSection.getConfigurationSection(path));
+	}
+
+	public static List<ItemExpression> getItemExpressionList(ConfigurationSection config, String path) {
+		if (!config.contains(path))
+			return Collections.emptyList();
+
+		List<ConfigurationSection> itemExpressionsConfig = getConfigList(config, path);
+		List<ItemExpression> itemExpressions = new ArrayList<>();
+
+		for (ConfigurationSection itemExConfig : itemExpressionsConfig) {
+			itemExpressions.add(new ItemExpression(itemExConfig));
+		}
+
+		return itemExpressions;
+	}
+
+	@SuppressWarnings("unchecked") // fix your warnings, java
+	private static List<ConfigurationSection> getConfigList(ConfigurationSection config, String path)
+	{
+		if (!config.isList(path))
+			return Collections.emptyList();
+
+		List<ConfigurationSection> list = new ArrayList<>();
+
+		for (Object object : config.getList(path)) {
+			if (object instanceof Map) {
+				MemoryConfiguration mc = new MemoryConfiguration();
+
+				mc.addDefaults((Map<String, Object>) object);
+
+				list.add(mc);
+			}
+		}
+
+		return list;
 	}
 
 	private MaterialMatcher parseMaterial(ConfigurationSection config, String path) {
