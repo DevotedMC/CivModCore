@@ -257,9 +257,15 @@ public class ItemExpression {
 
 		ArrayList<EnchantmentMatcher> enchantmentMatcher = new ArrayList<>();
 		for (String enchantName : enchantments.getKeys(false)) {
-			enchantmentMatcher.add(
-					new ExactlyEnchantment(Enchantment.getByKey(NamespacedKey.minecraft(enchantName.toLowerCase())),
-							parseAmount(config, path + "." + enchantName)));
+			EnchantmentMatcher matcher;
+			AmountMatcher amountMatcher = parseAmount(config, path + "." + enchantName);
+			if (enchantName.equals("any")) {
+				matcher = new AnyEnchantment(amountMatcher);
+			} else {
+				matcher = new AnyEnchantment(amountMatcher);
+			}
+
+			enchantmentMatcher.add(matcher);
 		}
 
 		return new ItemEnchantmentsMatcher(enchantmentMatcher, mode, source);
