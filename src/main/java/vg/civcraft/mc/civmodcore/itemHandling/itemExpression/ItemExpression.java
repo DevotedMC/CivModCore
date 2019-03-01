@@ -11,6 +11,7 @@ import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+import vg.civcraft.mc.civmodcore.itemHandling.ItemMap;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enchantment.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.lore.*;
@@ -23,6 +24,7 @@ import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.uuid.*;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -285,6 +287,53 @@ public class ItemExpression {
 	 */
 	public boolean matches(ItemStack item) {
 		return matchers.stream().allMatch((matcher) -> matcher.matches(item));
+	}
+
+	/**
+	 * Returns a lambda with the ItemMap bound into its environment. This is an instance of currying in java.
+	 *
+	 * If you wanted to call this function directly you'd say `getMatchesItemMapPredicate(itemMap)(entry)`.
+	 *
+	 * This function is implemented in this way in order to be able to reuse the predicate inside multiple functions
+	 * while still being able to have the ItemMap usable inside the lambda.
+	 *
+	 * This function is mostly used to implement ItemMap advanced matching. It is not recommended to be used.
+	 * @param itemMap The curried ItemMap value
+	 * @return The curried function.
+	 */
+	public Predicate<Map.Entry<ItemStack, Integer>> getMatchesItemMapPredicate(ItemMap itemMap) {
+		// currying in java 2019
+		return (kv) -> {
+			ItemStack item = kv.getKey();
+			//Integer amount = kv.getValue();
+			return matchers.stream().allMatch((matcher) -> {
+				if (matcher instanceof ItemMapMatcher) {
+					return ((ItemMapMatcher) matcher).matches(itemMap, item);
+				} else {
+					return matcher.matches(item);
+				}
+			});
+		};
+	}
+
+	/**
+	 * Runs this ItemExpression on a given ItemMap, and returns true if the ItemExpression matched any one of the
+	 * ItemStacks contained within the ItemMap.
+	 * @param itemMap The ItemMap this ItemExpression will match over.
+	 * @return If this ItemExpression matched at least one of the ItemStacks within the ItemMap.
+	 */
+	public boolean matchesAnyItemMap(ItemMap itemMap) {
+		return itemMap.getEntrySet().stream().anyMatch(getMatchesItemMapPredicate(itemMap));
+	}
+
+	/**
+	 * Runs this ItemExpression on a given ItemMap, and returns true if the ItemExpression matched all of the
+	 * ItemStacks contained within the ItemMap.
+	 * @param itemMap The ItemMap this ItemExpression will match over.
+	 * @return If this ItemExpression matched every one of the ItemStacks within the ItemMap.
+	 */
+	public boolean matchesAllItemMap(ItemMap itemMap) {
+		return itemMap.getEntrySet().stream().allMatch(getMatchesItemMapPredicate(itemMap));
 	}
 
 	/**
