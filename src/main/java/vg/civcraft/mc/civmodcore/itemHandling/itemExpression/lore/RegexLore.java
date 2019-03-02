@@ -15,8 +15,6 @@ public class RegexLore implements LoreMatcher {
 
 	@Override
 	public boolean matches(List<String> lore) {
-		if (lore == null)
-			return false;
 		return pattern.matcher(String.join("\n", lore)).find();
 	}
 }
