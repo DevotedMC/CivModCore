@@ -334,6 +334,11 @@ public class ItemExpression {
 	/**
 	 * Returns a lambda with the ItemMap bound into its environment. This is an instance of currying in java.
 	 *
+	 * The lambda returned uses the Entry it is passed to match on the ItemStack key. If the matcher implements
+	 * ItemMapMatcher, it'll use that interface instead of the normal ItemMatcher. The reason it used an Entry instead
+	 * of directly the ItemStack contained within is that it's designed to be used to be used as
+	 * ItemMap.getEntries().stream().anyMatch(getMatchesItemMapPredicate(ItemMap)).
+	 *
 	 * If you wanted to call this function directly you'd say `getMatchesItemMapPredicate(itemMap)(entry)`.
 	 *
 	 * This function is implemented in this way in order to be able to reuse the predicate inside multiple functions
