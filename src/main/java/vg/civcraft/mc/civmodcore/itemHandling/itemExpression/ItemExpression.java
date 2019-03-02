@@ -1,26 +1,26 @@
 package vg.civcraft.mc.civmodcore.itemHandling.itemExpression;
 
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
+import org.bukkit.block.Container;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.MemoryConfiguration;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import vg.civcraft.mc.civmodcore.itemHandling.ItemMap;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enchantment.*;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.inventory.ItemEmptyInventoryMatcher;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.inventory.ItemExactlyInventoryMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.lore.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.*;
-import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc.ItemFlagMatcher;
-import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc.ItemUnbreakableMatcher;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.name.*;
-import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc.ItemSkullMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.uuid.*;
 
 import java.util.*;
@@ -131,6 +131,19 @@ public class ItemExpression {
 		for (ItemFlag flag : flagsNotSet) {
 			addMatcher(new ItemFlagMatcher(flag, false));
 		}
+
+		// inventory
+		Inventory itemInventory;
+		if (item.getItemMeta() instanceof BlockStateMeta && ((BlockStateMeta) item.getItemMeta()).hasBlockState() &&
+				((BlockStateMeta) item.getItemMeta()).getBlockState() instanceof Container) {
+			itemInventory = ((Container) ((BlockStateMeta) item.getItemMeta()).getBlockState()).getInventory();
+			addMatcher(new ItemExactlyInventoryMatcher(
+					Arrays.stream(itemInventory.getContents())
+							.map(ItemExpression::new)
+							.collect(Collectors.toList())));
+		} else {
+			addMatcher(new ItemEmptyInventoryMatcher());
+		}
 	}
 
 	/**
@@ -153,6 +166,7 @@ public class ItemExpression {
 		addMatcher(new ItemSkullMatcher(parseSkull(config, "skull")));
 		parseFlags(config, "flags").forEach(this::addMatcher);
 		addMatcher(parseUnbreakable(config, "unbreakable"));
+		addMatcher(parseInventory(config, "inventory"));
 	}
 
 	/**
@@ -318,6 +332,14 @@ public class ItemExpression {
 			return null;
 		boolean unbreakable = config.getBoolean(path);
 		return new ItemUnbreakableMatcher(unbreakable);
+	}
+
+	private ItemExactlyInventoryMatcher parseInventory(ConfigurationSection config, String path) {
+		List<ItemExpression> itemExpressions = getItemExpressionList(config, path);
+		if (itemExpressions.isEmpty())
+			return null;
+
+		return new ItemExactlyInventoryMatcher(itemExpressions);
 	}
 
 	/**
