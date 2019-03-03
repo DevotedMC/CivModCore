@@ -1,7 +1,6 @@
 package vg.civcraft.mc.civmodcore.itemHandling.itemExpression;
 
 import org.bukkit.Material;
-import org.bukkit.block.Container;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.MemoryConfiguration;
 import org.bukkit.inventory.Inventory;
@@ -13,10 +12,8 @@ import vg.civcraft.mc.civmodcore.itemHandling.ItemMap;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.book.ItemBookAuthorMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.book.ItemBookGenerationMatcher;
-import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.book.ItemBookNoGenerationMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.book.ItemBookTitleMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enchantment.*;
-import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.inventory.ItemEmptyInventoryMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.inventory.ItemExactlyInventoryMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.lore.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.*;
@@ -60,10 +57,9 @@ public class ItemExpression {
 	/**
 	 * Creates an ItemExpression that matches exactly the passed ItemStack, and no other item.
 	 *
-	 * Note that because of how ItemExpression is implemented, if ItemExpression does not support matching an element
-	 * of an item, this will accept any item with that element. For example, if ItemExpression did not support
-	 * matching the player on a player skull (it supports it), this constructor would return an ItemExpression
-	 * that matched any player head even when passed a player head with a specific name.
+	 * This constructor uses ItemStack.equals() directly, so this supports all aspects of an item, even those that are
+	 * not supported by ItemExpression.
+	 *
 	 * @param item The ItemStack that this ItemExpression would exactly match.
 	 */
 	public ItemExpression(ItemStack item) {
@@ -75,89 +71,10 @@ public class ItemExpression {
 	 *
 	 * See also ItemExpression(ItemStack).
 	 * @param item The item that this ItemExpression would match.
-	 * @param acceptSimilar If this ItemExpression should act similar to ItemStack.isSimilar().
+	 * @param acceptSimilar If this ItemExpression should use ItemStack.isSimilar() instead of .equals().
 	 */
 	public ItemExpression(ItemStack item, boolean acceptSimilar) {
-		// material
-		addMatcher(new ItemMaterialMatcher(new ExactlyMaterial(item.getType())));
-
-		// amount
-		if (!acceptSimilar)
-			addMatcher(new ItemAmountMatcher(new ExactlyAmount(item.getAmount())));
-
-		// stop here if there isn't any itemmeta, so not every other matcher needs to check
-		if (!item.hasItemMeta())
-			return;
-
-		// durability
-		if (item.getItemMeta() instanceof Damageable)
-			addMatcher(new ItemDurabilityMatcher(new ExactlyAmount(((Damageable) item.getItemMeta()).getDamage())));
-
-		// lore
-		addMatcher(new ItemLoreMatcher(new ExactlyLore(item.getItemMeta().hasLore() ?
-				item.getItemMeta().getLore() : Collections.emptyList())));
-
-		// name
-		if (item.getItemMeta().hasDisplayName())
-			addMatcher(new ItemNameMatcher(new ExactlyName(item.getItemMeta().getDisplayName())));
-		else
-			addMatcher(new ItemNameMatcher(new VanillaName()));
-
-		// enchantments
-		addMatcher(new ItemExactlyEnchantmentsMatcher(item.getEnchantments(), ITEM));
-
-		// enchantments held like an enchanted book
-		if (item.getItemMeta() instanceof EnchantmentStorageMeta)
-			addMatcher(new ItemExactlyEnchantmentsMatcher(((EnchantmentStorageMeta) item.getItemMeta()).getStoredEnchants(), HELD));
-		else
-			addMatcher(new ItemZeroEnchantsMatcher(HELD));
-
-		// skulls
-		if (item.getItemMeta() instanceof SkullMeta && ((SkullMeta) item.getItemMeta()).hasOwner())
-			addMatcher(new ItemSkullMatcher(Collections.singletonList(new ExactlyUUID(((SkullMeta) item.getItemMeta()).getOwningPlayer().getUniqueId()))));
-		else if (item.getItemMeta() instanceof SkullMeta && !((SkullMeta) item.getItemMeta()).hasOwner())
-			addMatcher(new ItemSkullMatcher(Collections.singletonList(new ExactlyUUID(new UUID(0, 0)))));
-
-		// unbreakable
-		addMatcher(new ItemUnbreakableMatcher(item.getItemMeta().isUnbreakable()));
-
-		// flags
-		HashSet<ItemFlag> flagsNotSet = new HashSet<>(Arrays.asList(ItemFlag.values()));
-
-		for (ItemFlag flag : item.getItemMeta().getItemFlags()) {
-			addMatcher(new ItemFlagMatcher(flag, true));
-			flagsNotSet.remove(flag);
-		}
-
-		for (ItemFlag flag : flagsNotSet) {
-			addMatcher(new ItemFlagMatcher(flag, false));
-		}
-
-		// inventory
-		Inventory itemInventory;
-		if (item.getItemMeta() instanceof BlockStateMeta && ((BlockStateMeta) item.getItemMeta()).hasBlockState() &&
-				((BlockStateMeta) item.getItemMeta()).getBlockState() instanceof Container) {
-			itemInventory = ((Container) ((BlockStateMeta) item.getItemMeta()).getBlockState()).getInventory();
-			addMatcher(new ItemExactlyInventoryMatcher(
-					Arrays.stream(itemInventory.getContents())
-							.map(ItemExpression::new)
-							.collect(Collectors.toList())));
-		} else {
-			addMatcher(new ItemEmptyInventoryMatcher());
-		}
-
-		// books
-		if (item.getItemMeta() instanceof BookMeta) {
-			addMatcher(new ItemBookTitleMatcher(new ExactlyName(((BookMeta) item.getItemMeta()).getTitle())));
-			addMatcher(new ItemBookAuthorMatcher(new ExactlyName(((BookMeta) item.getItemMeta()).getAuthor())));
-
-			if (((BookMeta) item.getItemMeta()).hasGeneration())
-				addMatcher(new ItemBookGenerationMatcher(Collections.singletonList(((BookMeta) item.getItemMeta()).getGeneration())));
-			else
-				addMatcher(new ItemBookNoGenerationMatcher());
-		} else {
-			addMatcher(new ItemMetaNotInstanceOfMatcher(BookMeta.class));
-		}
+		addMatcher(new ItemExactlyStackMatcher(item, acceptSimilar));
 	}
 
 	/**
@@ -182,6 +99,7 @@ public class ItemExpression {
 		addMatcher(parseUnbreakable(config, "unbreakable"));
 		addMatcher(parseInventory(config, "inventory"));
 		parseBook(config, "book").forEach(this::addMatcher);
+		addMatcher(parseExactly(config, "exactly"));
 	}
 
 	/**
@@ -393,6 +311,15 @@ public class ItemExpression {
 		// TODO: Implement matching on the pages of a book
 
 		return matchers;
+	}
+
+	private ItemExactlyStackMatcher parseExactly(ConfigurationSection config, String path) {
+		if (!config.contains(path))
+			return null;
+
+		boolean acceptBoolean = config.getBoolean(path + ".acceptSimilar");
+
+		return new ItemExactlyStackMatcher(config.getItemStack(path), acceptBoolean);
 	}
 
 	/**
