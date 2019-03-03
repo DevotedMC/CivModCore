@@ -18,11 +18,10 @@ public class ItemBookGenerationMatcher implements ItemMatcher {
 
 	@Override
 	public boolean matches(ItemStack item) {
-		BookMeta.Generation generation = BookMeta.Generation.ORIGINAL;
+		if (!item.hasItemMeta() || !(item.getItemMeta() instanceof BookMeta) || !((BookMeta) item.getItemMeta()).hasGeneration()) {
+			return false;
+		}
 
-		if (item.hasItemMeta() && item.getItemMeta() instanceof BookMeta && ((BookMeta) item.getItemMeta()).hasGeneration())
-			generation = ((BookMeta) item.getItemMeta()).getGeneration();
-
-		return generations.contains(generation);
+		return generations.contains(((BookMeta) item.getItemMeta()).getGeneration());
 	}
 }
