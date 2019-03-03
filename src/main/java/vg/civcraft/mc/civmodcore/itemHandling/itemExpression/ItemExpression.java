@@ -8,12 +8,13 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.inventory.meta.BlockStateMeta;
-import org.bukkit.inventory.meta.Damageable;
-import org.bukkit.inventory.meta.EnchantmentStorageMeta;
-import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.inventory.meta.*;
 import vg.civcraft.mc.civmodcore.itemHandling.ItemMap;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount.*;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.book.ItemBookAuthorMatcher;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.book.ItemBookGenerationMatcher;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.book.ItemBookNoGenerationMatcher;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.book.ItemBookTitleMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enchantment.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.inventory.ItemEmptyInventoryMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.inventory.ItemExactlyInventoryMatcher;
@@ -144,6 +145,19 @@ public class ItemExpression {
 		} else {
 			addMatcher(new ItemEmptyInventoryMatcher());
 		}
+
+		// books
+		if (item.getItemMeta() instanceof BookMeta) {
+			addMatcher(new ItemBookTitleMatcher(new ExactlyName(((BookMeta) item.getItemMeta()).getTitle())));
+			addMatcher(new ItemBookAuthorMatcher(new ExactlyName(((BookMeta) item.getItemMeta()).getAuthor())));
+
+			if (((BookMeta) item.getItemMeta()).hasGeneration())
+				addMatcher(new ItemBookGenerationMatcher(Collections.singletonList(((BookMeta) item.getItemMeta()).getGeneration())));
+			else
+				addMatcher(new ItemBookNoGenerationMatcher());
+		} else {
+			addMatcher(new ItemMetaNotInstanceOfMatcher(BookMeta.class));
+		}
 	}
 
 	/**
@@ -167,6 +181,7 @@ public class ItemExpression {
 		parseFlags(config, "flags").forEach(this::addMatcher);
 		addMatcher(parseUnbreakable(config, "unbreakable"));
 		addMatcher(parseInventory(config, "inventory"));
+		parseBook(config, "book").forEach(this::addMatcher);
 	}
 
 	/**
@@ -340,6 +355,44 @@ public class ItemExpression {
 			return null;
 
 		return new ItemExactlyInventoryMatcher(itemExpressions);
+	}
+
+	private List<ItemMatcher> parseBook(ConfigurationSection config, String path) {
+		if (!config.contains(path))
+			return Collections.emptyList();
+
+		ConfigurationSection book = config.getConfigurationSection(path);
+		ArrayList<ItemMatcher> matchers = new ArrayList<>();
+
+		// author
+		if (book.contains("author")) {
+			matchers.add(new ItemBookAuthorMatcher(parseName(book, "author")));
+		}
+
+		// generation
+		ArrayList<BookMeta.Generation> generations = new ArrayList<>();
+
+		if (book.contains("generation") && !book.isList("generation")) {
+			BookMeta.Generation generation = BookMeta.Generation.valueOf(book.getString("generation").toUpperCase());
+			generations.add(generation);
+		} else if (book.isList("generation")) {
+			for (String generationS : book.getStringList("generation")) {
+				BookMeta.Generation generation = BookMeta.Generation.valueOf(generationS.toUpperCase());
+				generations.add(generation);
+			}
+		}
+
+		matchers.add(new ItemBookGenerationMatcher(generations));
+
+		// title
+		if (book.contains("title")) {
+			matchers.add(new ItemBookTitleMatcher(parseName(book, "title")));
+		}
+
+		// pages
+		// TODO: Implement matching on the pages of a book
+
+		return matchers;
 	}
 
 	/**
