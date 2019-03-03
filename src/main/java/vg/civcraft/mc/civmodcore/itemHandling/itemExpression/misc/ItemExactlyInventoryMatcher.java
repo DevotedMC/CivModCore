@@ -1,4 +1,4 @@
-package vg.civcraft.mc.civmodcore.itemHandling.itemExpression.inventory;
+package vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc;
 
 import org.bukkit.block.Container;
 import org.bukkit.inventory.ItemStack;

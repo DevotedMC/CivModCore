@@ -14,7 +14,7 @@ import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.book.ItemBookAuthor
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.book.ItemBookGenerationMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.book.ItemBookTitleMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enchantment.*;
-import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.inventory.ItemExactlyInventoryMatcher;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc.ItemExactlyInventoryMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.lore.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc.*;
