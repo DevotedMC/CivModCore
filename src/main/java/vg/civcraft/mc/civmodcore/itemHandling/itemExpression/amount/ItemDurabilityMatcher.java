@@ -16,11 +16,9 @@ public class ItemDurabilityMatcher implements ItemMatcher {
 
 	@Override
 	public boolean matches(ItemStack item) {
-		int durability;
 		if (!item.hasItemMeta() || !(item.getItemMeta() instanceof Damageable))
-			durability = -1;
-		else
-			durability = ((Damageable) item.getItemMeta()).getDamage();
-		return matcher.matches(durability);
+            return false;
+
+		return matcher.matches(((Damageable) item.getItemMeta()).getDamage());
 	}
 }
