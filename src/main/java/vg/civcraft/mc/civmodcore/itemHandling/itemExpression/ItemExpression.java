@@ -10,9 +10,7 @@ import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.*;
 import vg.civcraft.mc.civmodcore.itemHandling.ItemMap;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount.*;
-import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.book.ItemBookAuthorMatcher;
-import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.book.ItemBookGenerationMatcher;
-import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.book.ItemBookTitleMatcher;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.book.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enchantment.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc.ItemExactlyInventoryMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.lore.*;
@@ -308,7 +306,15 @@ public class ItemExpression {
 		}
 
 		// pages
-		// TODO: Implement matching on the pages of a book
+		if (book.contains("pages.regex")) {
+			boolean isMultiline = book.getBoolean("pages.regexMultiline", true);
+			Pattern pattern = Pattern.compile(book.getString("pages.regex"),isMultiline ? Pattern.MULTILINE : 0);
+
+			matchers.add(new ItemBookPagesMatcher(new RegexBookPages(pattern)));
+		} else if (book.isList("pages")) {
+			List<String> pages = book.getStringList("pages");
+			matchers.add(new ItemBookPagesMatcher(new ExactlyBookPages(pages)));
+		}
 
 		return matchers;
 	}
