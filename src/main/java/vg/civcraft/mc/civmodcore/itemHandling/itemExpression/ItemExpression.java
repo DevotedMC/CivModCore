@@ -1,5 +1,6 @@
 package vg.civcraft.mc.civmodcore.itemHandling.itemExpression;
 
+import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.MemoryConfiguration;
@@ -98,6 +99,9 @@ public class ItemExpression {
 		addMatcher(parseInventory(config, "inventory"));
 		parseBook(config, "book").forEach(this::addMatcher);
 		addMatcher(parseExactly(config, "exactly"));
+		addMatcher(parseShulkerBoxColor(config, "shulkerbox.color", false));
+		addMatcher(parseShulkerBoxColor(config, "shulkerbox.colorAny", false));
+		addMatcher(parseShulkerBoxColor(config, "shulkerbox.colorNone", true));
 	}
 
 	/**
@@ -326,6 +330,20 @@ public class ItemExpression {
 		boolean acceptBoolean = config.getBoolean(path + ".acceptSimilar");
 
 		return new ItemExactlyStackMatcher(config.getItemStack(path), acceptBoolean);
+	}
+
+	private ItemShulkerBoxColorMatcher parseShulkerBoxColor(ConfigurationSection config, String path, boolean notInList) {
+		if (!config.contains(path))
+			return null;
+
+		if (config.isList(path)) {
+			ArrayList<DyeColor> colors = new ArrayList<>();
+			config.getStringList(path).stream().map((c) -> DyeColor.valueOf(c.toUpperCase())).forEach(colors::add);
+			return new ItemShulkerBoxColorMatcher(colors, notInList);
+		} else {
+			return new ItemShulkerBoxColorMatcher(
+					Collections.singletonList(DyeColor.valueOf(config.getString(path).toUpperCase())), notInList);
+		}
 	}
 
 	/**
