@@ -11,13 +11,14 @@ public class ItemUnbreakableMatcher implements ItemMatcher {
 		this.unbreakable = unbreakable;
 	}
 
-	boolean unbreakable;
+	public boolean unbreakable;
 
 	@Override
 	public boolean matches(ItemStack item) {
-		if (!item.hasItemMeta() && unbreakable)
+		boolean isUnbreakable = false;
+		if (item.hasItemMeta())
 			// an item without metadata can not be unbreakable
-			return false;
-		return item.getItemMeta().isUnbreakable() == unbreakable;
+			isUnbreakable = item.getItemMeta().isUnbreakable();
+		return isUnbreakable == unbreakable;
 	}
 }
