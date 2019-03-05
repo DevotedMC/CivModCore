@@ -102,6 +102,8 @@ public class ItemExpression {
 		addMatcher(parseShulkerBoxColor(config, "shulkerbox.color", false));
 		addMatcher(parseShulkerBoxColor(config, "shulkerbox.colorAny", false));
 		addMatcher(parseShulkerBoxColor(config, "shulkerbox.colorNone", true));
+		addMatcher(parseKnowlegeBook(config, "knowlegebook.recipesAny", false));
+		addMatcher(parseKnowlegeBook(config, "knowlegebook.recipesAll", true));
 	}
 
 	/**
@@ -344,6 +346,13 @@ public class ItemExpression {
 			return new ItemShulkerBoxColorMatcher(
 					Collections.singletonList(DyeColor.valueOf(config.getString(path).toUpperCase())), notInList);
 		}
+	}
+
+	private ItemKnowledgeBookMatcher parseKnowlegeBook(ConfigurationSection config, String path, boolean requireAll) {
+		if (!config.contains(path))
+			return null;
+
+		return new ItemKnowledgeBookMatcher(parseName(config, path), requireAll);
 	}
 
 	/**
