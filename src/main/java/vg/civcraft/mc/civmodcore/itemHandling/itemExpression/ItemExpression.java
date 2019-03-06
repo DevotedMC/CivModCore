@@ -19,10 +19,7 @@ import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.lore.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.name.*;
-import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.potion.AnyPotionEffect;
-import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.potion.ExactlyPotionEffect;
-import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.potion.ItemPotionEffectsMatcher;
-import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.potion.PotionEffectMatcher;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.potion.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.uuid.*;
 
 import java.util.*;
@@ -372,6 +369,20 @@ public class ItemExpression {
 		matchers.add(parsePotionEffects(potion,  "customEffectsAny", ANY));
 		matchers.add(parsePotionEffects(potion, "customEffectsAll", ALL));
 		matchers.add(parsePotionEffects(potion, "customEffectsNone", NONE));
+
+		if (potion.contains("base")) {
+			ConfigurationSection base = potion.getConfigurationSection("base");
+
+			NameMatcher type;
+			Boolean isExtended = config.contains("extended") ? config.getBoolean("extended") : null;
+			Boolean isUpgraded = config.contains("upgraded") ? config.getBoolean("upgraded") : null;
+
+			if (base.contains("type")) {
+				type = parseName(base, "type");
+				matchers.add(new ItemPotionBaseEffectMatcher(type,
+						Optional.ofNullable(isExtended), Optional.ofNullable(isUpgraded)));
+			}
+		}
 
 		return matchers;
 	}
