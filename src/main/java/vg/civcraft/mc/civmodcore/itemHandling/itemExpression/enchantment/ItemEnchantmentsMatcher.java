@@ -4,6 +4,7 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.ItemMatcher;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc.ListMatchingMode;
 
 import java.util.List;
 import java.util.Map;
@@ -14,13 +15,8 @@ import java.util.stream.Stream;
  * @author Ameliorate
  */
 public class ItemEnchantmentsMatcher implements ItemMatcher {
-	public enum Mode {
-		ANY,
-		ALL,
-		NONE,
-	}
 
-	public ItemEnchantmentsMatcher(List<EnchantmentMatcher> enchantmentMatchers, Mode mode, EnchantmentsSource source) {
+	public ItemEnchantmentsMatcher(List<EnchantmentMatcher> enchantmentMatchers, ListMatchingMode mode, EnchantmentsSource source) {
 		if (enchantmentMatchers.isEmpty())
 			throw new IllegalArgumentException("enchanmentMatchers can not be empty. If an empty enchantmentMatchers " +
 					"was allowed, it would cause many subtle logic errors.");
@@ -30,7 +26,7 @@ public class ItemEnchantmentsMatcher implements ItemMatcher {
 	}
 
 	public List<EnchantmentMatcher> enchantmentMatchers;
-	public Mode mode;
+	public ListMatchingMode mode;
 	public EnchantmentsSource source;
 
 	@Override

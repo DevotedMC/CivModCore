@@ -9,6 +9,7 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.*;
+import org.bukkit.potion.PotionEffectType;
 import vg.civcraft.mc.civmodcore.itemHandling.ItemMap;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.book.*;
@@ -18,6 +19,10 @@ import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.lore.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.name.*;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.potion.AnyPotionEffect;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.potion.ExactlyPotionEffect;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.potion.ItemPotionEffectsMatcher;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.potion.PotionEffectMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.uuid.*;
 
 import java.util.*;
@@ -28,7 +33,7 @@ import java.util.stream.Collectors;
 
 import static vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enchantment.EnchantmentsSource.HELD;
 import static vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enchantment.EnchantmentsSource.ITEM;
-import static vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enchantment.ItemEnchantmentsMatcher.Mode.*;
+import static vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc.ListMatchingMode.*;
 
 /**
  * A unified syntax for matching any ItemStack for things like the material, amount, lore contents, and more.
@@ -104,6 +109,7 @@ public class ItemExpression {
 		addMatcher(parseShulkerBoxColor(config, "shulkerbox.colorNone", true));
 		addMatcher(parseKnowlegeBook(config, "knowlegebook.recipesAny", false));
 		addMatcher(parseKnowlegeBook(config, "knowlegebook.recipesAll", true));
+		parsePotion(config, "potion").forEach(this::addMatcher);
 	}
 
 	/**
@@ -200,7 +206,7 @@ public class ItemExpression {
 	}
 
 	private ItemEnchantmentsMatcher parseEnchantment(ConfigurationSection config, String path,
-													 ItemEnchantmentsMatcher.Mode mode,
+													 ListMatchingMode mode,
 													 EnchantmentsSource source) {
 		ConfigurationSection enchantments = config.getConfigurationSection(path);
 		if (enchantments == null)
@@ -353,6 +359,42 @@ public class ItemExpression {
 			return null;
 
 		return new ItemKnowledgeBookMatcher(parseName(config, path), requireAll);
+	}
+
+	private List<ItemMatcher> parsePotion(ConfigurationSection config, String path) {
+		if (!config.contains(path))
+			return Collections.emptyList();
+
+		ArrayList<ItemMatcher> matchers = new ArrayList<>();
+
+		ConfigurationSection potion = config.getConfigurationSection(path);
+
+		matchers.add(parsePotionEffects(potion,  "customEffectsAny", ANY));
+		matchers.add(parsePotionEffects(potion, "customEffectsAll", ALL));
+		matchers.add(parsePotionEffects(potion, "customEffectsNone", NONE));
+
+		return matchers;
+	}
+
+	private ItemPotionEffectsMatcher parsePotionEffects(ConfigurationSection config, String path, ListMatchingMode mode) {
+		if (!config.isList(path))
+			return null;
+
+		ArrayList<PotionEffectMatcher> matchers = new ArrayList<>();
+
+		for (ConfigurationSection effect : getConfigList(config, path)) {
+			String type = effect.getString("type");
+			AmountMatcher level = parseAmount(effect, "level");
+			AmountMatcher duration = parseAmount(effect, "durationTicks");
+
+			PotionEffectMatcher matcher = type.equals("any") ?
+					new AnyPotionEffect(level, duration) :
+					new ExactlyPotionEffect(PotionEffectType.getByName(type), level, duration);
+
+			matchers.add(matcher);
+		}
+
+		return new ItemPotionEffectsMatcher(matchers, mode);
 	}
 
 	/**
