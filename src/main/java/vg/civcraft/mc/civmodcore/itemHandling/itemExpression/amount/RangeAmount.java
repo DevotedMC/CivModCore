@@ -12,18 +12,18 @@ public class RangeAmount implements AmountMatcher {
 	 * @param lowInclusive If this range should accept values equal to low.
 	 * @param highInclusive If this range should accept values equal to high.
 	 */
-	public RangeAmount(int low, int high, boolean lowInclusive, boolean highInclusive) {
+	public RangeAmount(double low, double high, boolean lowInclusive, boolean highInclusive) {
 		set(low, high);
 		this.highInclusive = highInclusive;
 		this.lowInclusive = lowInclusive;
 	}
 
-	private int low;
-	private int high;
+	private double low;
+	private double high;
 	public boolean highInclusive;
 	public boolean lowInclusive;
 
-	public void set(int low, int high) {
+	public void set(double low, double high) {
 		if (low <= high) {
 			// expected situation, do as normal
 			this.low = low;
@@ -35,16 +35,16 @@ public class RangeAmount implements AmountMatcher {
 		}
 	}
 
-	public int getLow() {
+	public double getLow() {
 		return low;
 	}
 
-	public int getHigh() {
+	public double getHigh() {
 		return high;
 	}
 
 	@Override
-	public boolean matches(int amount) {
+	public boolean matches(double amount) {
 		if (lowInclusive) {
 			if (amount < low)
 				return false;

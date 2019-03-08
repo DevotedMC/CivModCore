@@ -4,10 +4,7 @@ import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.MemoryConfiguration;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemFlag;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.*;
 import org.bukkit.potion.PotionEffectType;
 import vg.civcraft.mc.civmodcore.itemHandling.ItemMap;
@@ -107,6 +104,7 @@ public class ItemExpression {
 		addMatcher(parseKnowlegeBook(config, "knowlegebook.recipesAny", false));
 		addMatcher(parseKnowlegeBook(config, "knowlegebook.recipesAll", true));
 		parsePotion(config, "potion").forEach(this::addMatcher);
+		parseAllAttributes(config, "attributes").forEach(this::addMatcher);
 	}
 
 	/**
@@ -169,14 +167,14 @@ public class ItemExpression {
 	private AmountMatcher parseAmount(ConfigurationSection config, String path) {
 		if (config.contains(path + ".range"))
 			return(new RangeAmount(
-					config.getInt(path + ".range.low", 0),
-					config.getInt(path + ".range.high"),
+					config.getDouble(path + ".range.low", 0),
+					config.getDouble(path + ".range.high"),
 					config.getBoolean(path + ".range.inclusiveLow", true),
 					config.getBoolean(path + ".range.inclusiveHigh", true)));
 		else if ("any".equals(config.getString(path)))
 			return(new AnyAmount());
 		else if (config.contains(path))
-			return(new ExactlyAmount(config.getInt(path)));
+			return(new ExactlyAmount(config.getDouble(path)));
 		return null;
 	}
 
@@ -408,6 +406,47 @@ public class ItemExpression {
 		return new ItemPotionEffectsMatcher(matchers, mode);
 	}
 
+	private List<ItemAttributeMatcher> parseAllAttributes(ConfigurationSection config, String path) {
+		ArrayList<ItemAttributeMatcher> matchers = new ArrayList<>();
+
+		for (ListMatchingMode mode : ListMatchingMode.values()) {
+			for (EquipmentSlot slot : EquipmentSlot.values()) {
+				String modeString = mode.toString().toLowerCase();
+
+				matchers.add(parseAttributes(config, path + "." + slot + "." + modeString, slot, mode));
+			}
+		}
+
+		for (ListMatchingMode mode : ListMatchingMode.values()) {
+			matchers.add(parseAttributes(config, path + ".any." + mode, null, mode));
+		}
+
+		return matchers;
+	}
+
+	private ItemAttributeMatcher parseAttributes(ConfigurationSection config, String path, EquipmentSlot slot,
+												 ListMatchingMode mode) {
+		if (!(config.isList(path)))
+			return null;
+
+		List<ItemAttributeMatcher.AttributeMatcher> attributeMatchers = new ArrayList<>();
+
+		for (ConfigurationSection attribute : getConfigList(config, path)) {
+			NameMatcher attributeM = parseName(attribute, "attribute");
+			NameMatcher name = parseName(attribute, "name");
+			NameMatcher operation = parseName(attribute, "operation");
+			UUIDMatcher uuid = new ExactlyUUID(UUID.fromString(attribute.getString("uuid")));
+			AmountMatcher amount = parseAmount(attribute, "amount");
+
+			ItemAttributeMatcher.AttributeMatcher attributeMatcher =
+					new ItemAttributeMatcher.AttributeMatcher(attributeM, name, operation, uuid, amount);
+
+			attributeMatchers.add(attributeMatcher);
+		}
+
+		return new ItemAttributeMatcher(attributeMatchers, slot, mode);
+	}
+
 	/**
 	 * Runs this ItemExpression on a given ItemStack.
 	 *
@@ -586,17 +625,17 @@ public class ItemExpression {
 		}
 
 		if (amountMatcher instanceof ExactlyAmount) {
-			return ((ExactlyAmount) amountMatcher).amount;
+			return (int) ((ExactlyAmount) amountMatcher).amount;
 		} else if (amountMatcher instanceof AnyAmount) {
 			return -1;
 		} else if (amountMatcher instanceof RangeAmount && !random) {
 			RangeAmount rangeAmount = (RangeAmount) amountMatcher;
-			return rangeAmount.getLow() + (rangeAmount.lowInclusive ? 0 : 1);
+			return (int) (rangeAmount.getLow() + (rangeAmount.lowInclusive ? 0 : 1));
 		} else if (amountMatcher instanceof RangeAmount && random) {
 			RangeAmount rangeAmount = (RangeAmount) amountMatcher;
 			return ThreadLocalRandom.current()
-					.nextInt(rangeAmount.getLow() + (rangeAmount.lowInclusive ? 0 : -1),
-							rangeAmount.getHigh() + (rangeAmount.highInclusive ? 1 : 0));
+					.nextInt((int) rangeAmount.getLow() + (rangeAmount.lowInclusive ? 0 : -1),
+							(int) rangeAmount.getHigh() + (rangeAmount.highInclusive ? 1 : 0));
 		} else {
 			throw new IllegalArgumentException("removeFromInventory(Inventory, boolean) does not work with custom AmountMatchers");
 		}

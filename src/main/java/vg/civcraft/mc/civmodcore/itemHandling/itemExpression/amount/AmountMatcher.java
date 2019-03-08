@@ -7,5 +7,9 @@ package vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount;
  * the level of an enchantment.
  */
 public interface AmountMatcher {
-	boolean matches(int amount);
+	default boolean matches(int amount) {
+		return matches((double) amount);
+	}
+
+	boolean matches(double amount);
 }
