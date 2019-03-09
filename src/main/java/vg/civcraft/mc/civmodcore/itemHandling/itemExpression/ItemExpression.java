@@ -4,6 +4,7 @@ import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.MemoryConfiguration;
+import org.bukkit.entity.TropicalFish;
 import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.*;
 import org.bukkit.potion.PotionEffectType;
@@ -17,6 +18,9 @@ import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.name.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.potion.*;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.tropicalbucket.ItemTropicFishBBodyColorMatcher;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.tropicalbucket.ItemTropicFishBPatternColorMatcher;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.tropicalbucket.ItemTropicFishBPatternMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.uuid.*;
 
 import java.util.*;
@@ -105,6 +109,7 @@ public class ItemExpression {
 		addMatcher(parseKnowlegeBook(config, "knowlegebook.recipesAll", true));
 		parsePotion(config, "potion").forEach(this::addMatcher);
 		parseAllAttributes(config, "attributes").forEach(this::addMatcher);
+		parseTropicFishBucket(config, "tropicalFishBucket").forEach(this::addMatcher);
 	}
 
 	/**
@@ -445,6 +450,72 @@ public class ItemExpression {
 		}
 
 		return new ItemAttributeMatcher(attributeMatchers, slot, mode);
+	}
+
+	private List<ItemMatcher> parseTropicFishBucket(ConfigurationSection config, String path) {
+		if (!config.contains(path))
+			return Collections.emptyList();
+
+		ArrayList<ItemMatcher> matchers = new ArrayList<>();
+
+		ConfigurationSection bucket = config.getConfigurationSection(path);
+
+		matchers.add(parseEnumListMatcher(bucket, "bodyColor.any",
+				false,
+				ItemTropicFishBBodyColorMatcher::new, DyeColor.class));
+		matchers.add(parseEnumListMatcher(bucket, "bodyColor.none",
+				true,
+				ItemTropicFishBBodyColorMatcher::new, DyeColor.class));
+		matchers.add(parseEnumListMatcher(bucket, "patternColor.any",
+				false,
+				ItemTropicFishBPatternColorMatcher::new, DyeColor.class));
+		matchers.add(parseEnumListMatcher(bucket, "patternColor.none",
+				true,
+				ItemTropicFishBPatternColorMatcher::new, DyeColor.class));
+		matchers.add(parseEnumListMatcher(bucket, "pattern.any",
+				false,
+				ItemTropicFishBPatternMatcher::new, TropicalFish.Pattern.class));
+		matchers.add(parseEnumListMatcher(bucket, "pattern.none",
+				true,
+				ItemTropicFishBPatternMatcher::new, TropicalFish.Pattern.class));
+
+		return matchers;
+	}
+
+	/**
+	 * Parses a list of Enums in the config into an ItemMatcher.
+	 * @param matcher The constructor of the ItemMatcher in question. This should usually be (thing implements ItemMatcher)::new.
+	 * @param enumClass The type of the enum that the ItemMatcher has a list of.
+	 * @param <E> The type of the enum that the ItemMatcher has a list of.
+	 */
+	private <E extends Enum<E>> ItemMatcher parseEnumListMatcher(ConfigurationSection config, String path,
+																 boolean notInList,
+																 EnumItemMatcher<E> matcher, Class<E> enumClass) {
+		if (!config.contains(path))
+			return null;
+
+		ArrayList<String> enumStrings = new ArrayList<>();
+
+		if (!config.isList(path)) {
+			enumStrings.add(config.getString(path));
+		} else {
+			enumStrings.addAll(config.getStringList(path));
+		}
+
+		List<E> properties = enumStrings.stream()
+				.map((name) -> matcher.parseEnum(enumClass, name.toUpperCase()))
+				.collect(Collectors.toList());
+
+		return matcher.construct(properties, notInList);
+	}
+
+	@FunctionalInterface
+	private interface EnumItemMatcher<E extends Enum<E>> {
+		ItemMatcher construct(List<E> properties, boolean notInList);
+
+		default E parseEnum(Class<E> enumClass, String name) {
+			return E.valueOf(enumClass, name);
+		}
 	}
 
 	/**
