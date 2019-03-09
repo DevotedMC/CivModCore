@@ -102,9 +102,7 @@ public class ItemExpression {
 		addMatcher(parseInventory(config, "inventory"));
 		parseBook(config, "book").forEach(this::addMatcher);
 		addMatcher(parseExactly(config, "exactly"));
-		addMatcher(parseShulkerBoxColor(config, "shulkerbox.color", false));
-		addMatcher(parseShulkerBoxColor(config, "shulkerbox.colorAny", false));
-		addMatcher(parseShulkerBoxColor(config, "shulkerbox.colorNone", true));
+		parseEnumListMatcherAnyNone(config, "shulkerbox", ItemShulkerBoxColorMatcher::new, DyeColor.class).forEach(this::addMatcher);
 		addMatcher(parseKnowlegeBook(config, "knowlegebook.recipesAny", false));
 		addMatcher(parseKnowlegeBook(config, "knowlegebook.recipesAll", true));
 		parsePotion(config, "potion").forEach(this::addMatcher);
@@ -460,24 +458,31 @@ public class ItemExpression {
 
 		ConfigurationSection bucket = config.getConfigurationSection(path);
 
-		matchers.add(parseEnumListMatcher(bucket, "bodyColor.any",
-				false,
+		matchers.addAll(parseEnumListMatcherAnyNone(bucket, "bodyColor",
 				ItemTropicFishBBodyColorMatcher::new, DyeColor.class));
-		matchers.add(parseEnumListMatcher(bucket, "bodyColor.none",
-				true,
-				ItemTropicFishBBodyColorMatcher::new, DyeColor.class));
-		matchers.add(parseEnumListMatcher(bucket, "patternColor.any",
-				false,
-				ItemTropicFishBPatternColorMatcher::new, DyeColor.class));
-		matchers.add(parseEnumListMatcher(bucket, "patternColor.none",
-				true,
-				ItemTropicFishBPatternColorMatcher::new, DyeColor.class));
-		matchers.add(parseEnumListMatcher(bucket, "pattern.any",
-				false,
+		matchers.addAll(parseEnumListMatcherAnyNone(bucket, "patternColor",
 				ItemTropicFishBPatternMatcher::new, TropicalFish.Pattern.class));
-		matchers.add(parseEnumListMatcher(bucket, "pattern.none",
-				true,
+		matchers.addAll(parseEnumListMatcherAnyNone(bucket, "pattern",
 				ItemTropicFishBPatternMatcher::new, TropicalFish.Pattern.class));
+
+		return matchers;
+	}
+
+	private <E extends Enum<E>> List<ItemMatcher> parseEnumListMatcherAnyNone(ConfigurationSection config, String path,
+																			  EnumItemMatcher<E> matcher, Class<E> enumClass) {
+		if (!config.contains(path))
+			return Collections.emptyList();
+
+		ArrayList<ItemMatcher> matchers = new ArrayList<>();
+
+		if (config.isConfigurationSection(path)) {
+			matchers.add(parseEnumListMatcher(config, path + ".any",
+					false, matcher, enumClass));
+			matchers.add(parseEnumListMatcher(config, path + ".none",
+					true, matcher, enumClass));
+		} else {
+			matchers.add(parseEnumListMatcher(config, path, false, matcher, enumClass));
+		}
 
 		return matchers;
 	}
