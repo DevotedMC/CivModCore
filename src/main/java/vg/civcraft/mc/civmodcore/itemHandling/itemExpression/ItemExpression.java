@@ -10,6 +10,7 @@ import org.bukkit.entity.TropicalFish;
 import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.*;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.potion.PotionType;
 import vg.civcraft.mc.civmodcore.itemHandling.ItemMap;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.book.*;
@@ -351,18 +352,21 @@ public class ItemExpression {
 		matchers.add(parsePotionEffects(potion, "customEffectsAll", ALL));
 		matchers.add(parsePotionEffects(potion, "customEffectsNone", NONE));
 
-		if (potion.contains("base")) {
+		if (potion.isConfigurationSection("base")) {
 			ConfigurationSection base = potion.getConfigurationSection("base");
 
-			NameMatcher type;
-			Boolean isExtended = config.contains("extended") ? config.getBoolean("extended") : null;
-			Boolean isUpgraded = config.contains("upgraded") ? config.getBoolean("upgraded") : null;
+			Boolean isExtended = base.contains("extended") ? base.getBoolean("extended") : null;
+			Boolean isUpgraded = base.contains("upgraded") ? base.getBoolean("upgraded") : null;
+			EnumMatcher<PotionType> type;
 
 			if (base.contains("type")) {
-				type = parseName(base, "type");
-				matchers.add(new ItemPotionBaseEffectMatcher(type,
-						Optional.ofNullable(isExtended), Optional.ofNullable(isUpgraded)));
+				type = parseEnumMatcher(base, "type", PotionType.class);
+			} else {
+				type = new EnumFromListMatcher<>(Arrays.asList(PotionType.values()));
 			}
+
+			matchers.add(new ItemPotionBaseEffectMatcher(type,
+					Optional.ofNullable(isExtended), Optional.ofNullable(isUpgraded)));
 		}
 
 		return matchers;

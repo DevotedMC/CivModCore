@@ -5,7 +5,7 @@ import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionType;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.ItemMatcher;
-import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.name.NameMatcher;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enummatcher.EnumMatcher;
 
 import java.util.Optional;
 
@@ -21,13 +21,13 @@ import java.util.Optional;
  * @author Ameliorate
  */
 public class ItemPotionBaseEffectMatcher implements ItemMatcher {
-	public ItemPotionBaseEffectMatcher(NameMatcher type, Optional<Boolean> isExtended, Optional<Boolean> isUpgraded) {
+	public ItemPotionBaseEffectMatcher(EnumMatcher<PotionType> type, Optional<Boolean> isExtended, Optional<Boolean> isUpgraded) {
 		this.type = type;
 		this.isExtended = isExtended;
 		this.isUpgraded = isUpgraded;
 	}
 
-	public NameMatcher type;
+	public EnumMatcher<PotionType> type;
 	public Optional<Boolean> isExtended;
 	public Optional<Boolean> isUpgraded;
 
@@ -52,6 +52,6 @@ public class ItemPotionBaseEffectMatcher implements ItemMatcher {
 				return false;
 		}
 
-		return this.type.matches(type.toString());
+		return this.type.matches(type);
 	}
 }
