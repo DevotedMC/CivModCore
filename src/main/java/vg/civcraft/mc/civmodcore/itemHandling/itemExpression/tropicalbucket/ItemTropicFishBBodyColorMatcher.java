@@ -4,24 +4,17 @@ import org.bukkit.DyeColor;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.TropicalFishBucketMeta;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.ItemMatcher;
-
-import java.util.List;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enummatcher.EnumMatcher;
 
 /**
  * @author Ameliorate
  */
 public class ItemTropicFishBBodyColorMatcher implements ItemMatcher {
-	public ItemTropicFishBBodyColorMatcher(List<DyeColor> bodyColor) {
-		this(bodyColor, false);
+	public ItemTropicFishBBodyColorMatcher(EnumMatcher<DyeColor> color) {
+		this.color = color;
 	}
 
-	public ItemTropicFishBBodyColorMatcher(List<DyeColor> bodyColor, boolean notInList) {
-		this.bodyColor = bodyColor;
-		this.notInList = notInList;
-	}
-
-	public List<DyeColor> bodyColor;
-	public boolean notInList;
+	public EnumMatcher<DyeColor> color;
 
 	@Override
 	public boolean matches(ItemStack item) {
@@ -29,10 +22,6 @@ public class ItemTropicFishBBodyColorMatcher implements ItemMatcher {
 				!((TropicalFishBucketMeta) item.getItemMeta()).hasVariant())
 			return false;
 
-		if (notInList) {
-			return !bodyColor.contains(((TropicalFishBucketMeta) item.getItemMeta()).getBodyColor());
-		} else {
-			return bodyColor.contains(((TropicalFishBucketMeta) item.getItemMeta()).getBodyColor());
-		}
+		return color.matches(((TropicalFishBucketMeta) item.getItemMeta()).getBodyColor());
 	}
 }

@@ -3,18 +3,17 @@ package vg.civcraft.mc.civmodcore.itemHandling.itemExpression.book;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.ItemMatcher;
-
-import java.util.List;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enummatcher.EnumMatcher;
 
 /**
  * @author Ameliorate
  */
 public class ItemBookGenerationMatcher implements ItemMatcher {
-	public ItemBookGenerationMatcher(List<BookMeta.Generation> generations) {
+	public ItemBookGenerationMatcher(EnumMatcher<BookMeta.Generation> generations) {
 		this.generations = generations;
 	}
 
-	public List<BookMeta.Generation> generations;
+	public EnumMatcher<BookMeta.Generation> generations;
 
 	@Override
 	public boolean matches(ItemStack item) {
@@ -22,6 +21,6 @@ public class ItemBookGenerationMatcher implements ItemMatcher {
 			return false;
 		}
 
-		return generations.contains(((BookMeta) item.getItemMeta()).getGeneration());
+		return generations.matches(((BookMeta) item.getItemMeta()).getGeneration());
 	}
 }

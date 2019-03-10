@@ -6,6 +6,7 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.ItemMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount.AmountMatcher;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enummatcher.EnumMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.name.NameMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.uuid.UUIDMatcher;
 
@@ -56,8 +57,8 @@ public class ItemAttributeMatcher implements ItemMatcher {
 	}
 
 	public static class AttributeMatcher {
-		public AttributeMatcher(NameMatcher attribute,
-								NameMatcher name, NameMatcher operation,
+		public AttributeMatcher(EnumMatcher<Attribute> attribute,
+								NameMatcher name, EnumMatcher<AttributeModifier.Operation> operation,
 								UUIDMatcher uuid, AmountMatcher amount) {
 			this.attribute = attribute;
 			this.name = name;
@@ -66,18 +67,18 @@ public class ItemAttributeMatcher implements ItemMatcher {
 			this.amount = amount;
 		}
 
-		public NameMatcher attribute;
+		public EnumMatcher<Attribute> attribute;
+		public EnumMatcher<AttributeModifier.Operation> operation;
 		public NameMatcher name;
-		public NameMatcher operation;
 		public UUIDMatcher uuid;
 		public AmountMatcher amount;
 
 		public boolean matches(Attribute attribute, AttributeModifier modifier) {
-			if (this.attribute != null && !this.attribute.matches(attribute.toString()))
+			if (this.attribute != null && !this.attribute.matches(attribute))
 			return false;
 			else if (name != null && !name.matches(modifier.getName()))
 				return false;
-			else if (operation != null && !operation.matches(modifier.getOperation().toString()))
+			else if (operation != null && !operation.matches(modifier.getOperation()))
 				return false;
 			else if (uuid != null && !uuid.matches(modifier.getUniqueId()))
 				return false;

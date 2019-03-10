@@ -2,6 +2,8 @@ package vg.civcraft.mc.civmodcore.itemHandling.itemExpression;
 
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.MemoryConfiguration;
 import org.bukkit.entity.TropicalFish;
@@ -12,6 +14,10 @@ import vg.civcraft.mc.civmodcore.itemHandling.ItemMap;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.book.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enchantment.*;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enummatcher.EnumFromListMatcher;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enummatcher.EnumIndexMatcher;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enummatcher.EnumMatcher;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enummatcher.NameEnumMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc.ItemExactlyInventoryMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.lore.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.*;
@@ -102,7 +108,7 @@ public class ItemExpression {
 		addMatcher(parseInventory(config, "inventory"));
 		parseBook(config, "book").forEach(this::addMatcher);
 		addMatcher(parseExactly(config, "exactly"));
-		parseEnumListMatcherAnyNone(config, "shulkerbox", ItemShulkerBoxColorMatcher::new, DyeColor.class).forEach(this::addMatcher);
+		addMatcher(new ItemShulkerBoxColorMatcher(parseEnumMatcher(config, "shulkerbox.color", DyeColor.class)));
 		addMatcher(parseKnowlegeBook(config, "knowlegebook.recipesAny", false));
 		addMatcher(parseKnowlegeBook(config, "knowlegebook.recipesAll", true));
 		parsePotion(config, "potion").forEach(this::addMatcher);
@@ -296,19 +302,7 @@ public class ItemExpression {
 		}
 
 		// generation
-		ArrayList<BookMeta.Generation> generations = new ArrayList<>();
-
-		if (book.contains("generation") && !book.isList("generation")) {
-			BookMeta.Generation generation = BookMeta.Generation.valueOf(book.getString("generation").toUpperCase());
-			generations.add(generation);
-		} else if (book.isList("generation")) {
-			for (String generationS : book.getStringList("generation")) {
-				BookMeta.Generation generation = BookMeta.Generation.valueOf(generationS.toUpperCase());
-				generations.add(generation);
-			}
-		}
-
-		matchers.add(new ItemBookGenerationMatcher(generations));
+		matchers.add(new ItemBookGenerationMatcher(parseEnumMatcher(config, "generation", BookMeta.Generation.class)));
 
 		// title
 		if (book.contains("title")) {
@@ -336,20 +330,6 @@ public class ItemExpression {
 		boolean acceptBoolean = config.getBoolean(path + ".acceptSimilar");
 
 		return new ItemExactlyStackMatcher(config.getItemStack(path), acceptBoolean);
-	}
-
-	private ItemShulkerBoxColorMatcher parseShulkerBoxColor(ConfigurationSection config, String path, boolean notInList) {
-		if (!config.contains(path))
-			return null;
-
-		if (config.isList(path)) {
-			ArrayList<DyeColor> colors = new ArrayList<>();
-			config.getStringList(path).stream().map((c) -> DyeColor.valueOf(c.toUpperCase())).forEach(colors::add);
-			return new ItemShulkerBoxColorMatcher(colors, notInList);
-		} else {
-			return new ItemShulkerBoxColorMatcher(
-					Collections.singletonList(DyeColor.valueOf(config.getString(path).toUpperCase())), notInList);
-		}
 	}
 
 	private ItemKnowledgeBookMatcher parseKnowlegeBook(ConfigurationSection config, String path, boolean requireAll) {
@@ -435,9 +415,9 @@ public class ItemExpression {
 		List<ItemAttributeMatcher.AttributeMatcher> attributeMatchers = new ArrayList<>();
 
 		for (ConfigurationSection attribute : getConfigList(config, path)) {
-			NameMatcher attributeM = parseName(attribute, "attribute");
+			EnumMatcher<Attribute> attributeM = parseEnumMatcher(attribute, "attribute", Attribute.class);
+			EnumMatcher<AttributeModifier.Operation> operation = parseEnumMatcher(attribute, "operation", AttributeModifier.Operation.class);
 			NameMatcher name = parseName(attribute, "name");
-			NameMatcher operation = parseName(attribute, "operation");
 			UUIDMatcher uuid = new ExactlyUUID(UUID.fromString(attribute.getString("uuid")));
 			AmountMatcher amount = parseAmount(attribute, "amount");
 
@@ -458,68 +438,36 @@ public class ItemExpression {
 
 		ConfigurationSection bucket = config.getConfigurationSection(path);
 
-		matchers.addAll(parseEnumListMatcherAnyNone(bucket, "bodyColor",
-				ItemTropicFishBBodyColorMatcher::new, DyeColor.class));
-		matchers.addAll(parseEnumListMatcherAnyNone(bucket, "patternColor",
-				ItemTropicFishBPatternMatcher::new, TropicalFish.Pattern.class));
-		matchers.addAll(parseEnumListMatcherAnyNone(bucket, "pattern",
-				ItemTropicFishBPatternMatcher::new, TropicalFish.Pattern.class));
+		matchers.add(new ItemTropicFishBBodyColorMatcher(parseEnumMatcher(bucket, "bodyColor", DyeColor.class)));
+		matchers.add(new ItemTropicFishBPatternColorMatcher(parseEnumMatcher(bucket, "patternColor", DyeColor.class)));
+		matchers.add(new ItemTropicFishBPatternMatcher(parseEnumMatcher(bucket, "pattern", TropicalFish.Pattern.class)));
 
 		return matchers;
 	}
 
-	private <E extends Enum<E>> List<ItemMatcher> parseEnumListMatcherAnyNone(ConfigurationSection config, String path,
-																			  EnumItemMatcher<E> matcher, Class<E> enumClass) {
-		if (!config.contains(path))
-			return Collections.emptyList();
-
-		ArrayList<ItemMatcher> matchers = new ArrayList<>();
-
-		if (config.isConfigurationSection(path)) {
-			matchers.add(parseEnumListMatcher(config, path + ".any",
-					false, matcher, enumClass));
-			matchers.add(parseEnumListMatcher(config, path + ".none",
-					true, matcher, enumClass));
-		} else {
-			matchers.add(parseEnumListMatcher(config, path, false, matcher, enumClass));
-		}
-
-		return matchers;
-	}
-
-	/**
-	 * Parses a list of Enums in the config into an ItemMatcher.
-	 * @param matcher The constructor of the ItemMatcher in question. This should usually be (thing implements ItemMatcher)::new.
-	 * @param enumClass The type of the enum that the ItemMatcher has a list of.
-	 * @param <E> The type of the enum that the ItemMatcher has a list of.
-	 */
-	private <E extends Enum<E>> ItemMatcher parseEnumListMatcher(ConfigurationSection config, String path,
-																 boolean notInList,
-																 EnumItemMatcher<E> matcher, Class<E> enumClass) {
+	private <E extends Enum<E>> EnumMatcher<E> parseEnumMatcher(ConfigurationSection config, String path,
+																Class<E> enumClass) {
 		if (!config.contains(path))
 			return null;
 
-		ArrayList<String> enumStrings = new ArrayList<>();
+		if (config.isList(path)) {
+			List<String> enumStrings = config.getStringList(path);
+			boolean notInList = false;
 
-		if (!config.isList(path)) {
-			enumStrings.add(config.getString(path));
+			if (enumStrings.get(0).equals("noneOf")) {
+				notInList = true;
+				enumStrings.remove(0);
+			}
+
+			List<E> properties = enumStrings.stream()
+					.map((name) -> E.valueOf(enumClass, name.toUpperCase()))
+					.collect(Collectors.toList());
+
+			return new EnumFromListMatcher<>(properties, notInList);
+		} if (config.isInt(path + ".index")) {
+			return new EnumIndexMatcher<>(config.getInt(path + ".index"));
 		} else {
-			enumStrings.addAll(config.getStringList(path));
-		}
-
-		List<E> properties = enumStrings.stream()
-				.map((name) -> matcher.parseEnum(enumClass, name.toUpperCase()))
-				.collect(Collectors.toList());
-
-		return matcher.construct(properties, notInList);
-	}
-
-	@FunctionalInterface
-	private interface EnumItemMatcher<E extends Enum<E>> {
-		ItemMatcher construct(List<E> properties, boolean notInList);
-
-		default E parseEnum(Class<E> enumClass, String name) {
-			return E.valueOf(enumClass, name);
+			return new NameEnumMatcher<>(parseName(config, path));
 		}
 	}
 
