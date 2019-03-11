@@ -8,10 +8,19 @@ public class ExactlyName implements NameMatcher {
 		this.name = name;
 	}
 
+	public ExactlyName(String name, boolean caseSensitive) {
+		this.name = name.toLowerCase();
+		this.caseSensitive = caseSensitive;
+	}
+
 	public String name;
+	public boolean caseSensitive = true;
 
 	@Override
 	public boolean matches(String name) {
-		return this.name.equals(name);
+		if (caseSensitive)
+			return this.name.equals(name);
+		else
+			return this.name.equals(name.toLowerCase());
 	}
 }

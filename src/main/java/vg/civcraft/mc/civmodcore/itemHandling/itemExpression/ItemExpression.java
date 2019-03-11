@@ -200,14 +200,19 @@ public class ItemExpression {
 		return null;
 	}
 
-	private NameMatcher parseName(ConfigurationSection config, String path) {
+	private NameMatcher parseName(ConfigurationSection config, String path, boolean caseSensitive) {
 		if (config.contains(path + ".regex"))
-			return(new RegexName(Pattern.compile(config.getString(path + ".regex"))));
+			return(new RegexName(Pattern.compile(config.getString(path + ".regex"),
+					caseSensitive ? 0 : Pattern.CASE_INSENSITIVE)));
 		else if ("vanilla".equals(config.getString(path)))
 			return(new VanillaName());
 		else if (config.contains(path))
-			return(new ExactlyName(config.getString(path)));
+			return(new ExactlyName(config.getString(path), caseSensitive));
 		return null;
+	}
+
+	private NameMatcher parseName(ConfigurationSection config, String path) {
+		return parseName(config, path, true);
 	}
 
 	private ItemEnchantmentsMatcher parseEnchantment(ConfigurationSection config, String path,
@@ -471,7 +476,7 @@ public class ItemExpression {
 		} if (config.isInt(path + ".index")) {
 			return new EnumIndexMatcher<>(config.getInt(path + ".index"));
 		} else {
-			return new NameEnumMatcher<>(parseName(config, path));
+			return new NameEnumMatcher<>(parseName(config, path, false));
 		}
 	}
 
