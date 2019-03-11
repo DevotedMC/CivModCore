@@ -326,6 +326,11 @@ public class ItemExpression {
 			matchers.add(new ItemBookPagesMatcher(new ExactlyBookPages(pages)));
 		}
 
+		// page count
+		if (book.contains("pageCount")) {
+			matchers.add(new ItemBookPageCountMatcher(parseAmount(book, "pageCount")));
+		}
+
 		return matchers;
 	}
 
