@@ -5,6 +5,9 @@ import org.bukkit.inventory.meta.BookMeta;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.ItemMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount.AmountMatcher;
 
+/**
+ * @author Ameliorate
+ */
 public class ItemBookPageCountMatcher implements ItemMatcher {
 	public ItemBookPageCountMatcher(AmountMatcher pageCount) {
 		this.pageCount = pageCount;
