@@ -100,9 +100,11 @@ public class ItemExpression {
 		addMatcher(parseEnchantment(config, "enchantmentsAny", ANY, ITEM));
 		addMatcher(parseEnchantment(config, "enchantmentsAll", ALL, ITEM));
 		addMatcher(parseEnchantment(config, "enchantmentsNone", NONE, ITEM));
+		addMatcher(parseEnchangmentCount(config, "enchantmentCount", ITEM));
 		addMatcher(parseEnchantment(config, "enchantmentsHeldAny", ANY, HELD));
 		addMatcher(parseEnchantment(config, "enchantmentsHeldAll", ALL, HELD));
 		addMatcher(parseEnchantment(config, "enchantmentsHeldNone", NONE, HELD));
+		addMatcher(parseEnchangmentCount(config, "enchantmentHeldCount", HELD));
 		addMatcher(new ItemSkullMatcher(parseSkull(config, "skull")));
 		parseFlags(config, "flags").forEach(this::addMatcher);
 		addMatcher(parseUnbreakable(config, "unbreakable"));
@@ -236,6 +238,14 @@ public class ItemExpression {
 		}
 
 		return new ItemEnchantmentsMatcher(enchantmentMatcher, mode, source);
+	}
+
+	private ItemEnchantmentCountMatcher parseEnchangmentCount(ConfigurationSection config, String path,
+															  EnchantmentsSource source) {
+		if (!config.contains(path))
+			return null;
+
+		return new ItemEnchantmentCountMatcher(parseAmount(config, path), source);
 	}
 
 	private List<UUIDMatcher> parseSkull(ConfigurationSection config, String path) {
