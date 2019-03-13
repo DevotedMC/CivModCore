@@ -7,6 +7,7 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.MemoryConfiguration;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.TropicalFish;
 import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.*;
@@ -29,6 +30,7 @@ import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc.ItemExactlyInv
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.lore.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc.*;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.mobspawner.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.name.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.potion.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.tropicalbucket.ItemTropicFishBBodyColorMatcher;
@@ -165,6 +167,9 @@ public class ItemExpression {
 
 		// map
 		addMatcher(parseMap(config, "map"));
+
+		// mob spawner
+		addMatcher(parseMobSpawner(config, "spawner"));
 	}
 
 	/**
@@ -668,6 +673,54 @@ public class ItemExpression {
 		return matchers;
 	}
 
+	private List<ItemMatcher> parseMobSpawner(ConfigurationSection config, String path) {
+		if (!config.isConfigurationSection(path))
+			return Collections.emptyList();
+
+		ArrayList<ItemMatcher> matchers = new ArrayList<>();
+		ConfigurationSection spawner = config.getConfigurationSection(path);
+
+		if (spawner.contains("delay.current")) {
+			// Caution: This is the time until the spawner will spawn its next mob. See minDelay and maxDelay for
+			// what might be expected.
+			matchers.add(new ItemMobSpawnerDelayMatcher(parseAmount(spawner, "delay.current")));
+		}
+
+		if (spawner.contains("maxNearbyEntities")) {
+			matchers.add(new ItemMobSpawnerMaxNearbyEntitiesMatcher(parseAmount(spawner, "maxNearbyEntities")));
+		}
+
+		if (spawner.contains("requiredPlayerRange")) {
+			matchers.add(new ItemMobSpawnerRequiredPlayerRangeMatcher(parseAmount(spawner, "requiredPlayerRange")));
+		}
+
+		if (spawner.contains("spawnCount")) {
+			matchers.add(new ItemMobSpawnerSpawnCountMatcher(parseAmount(spawner, "spawnCount")));
+		}
+
+		if (spawner.contains("delay.max")) {
+			matchers.add(new ItemMobSpawnerSpawnDelayMatcher(parseAmount(spawner, "delay.max"),
+					ItemMobSpawnerSpawnDelayMatcher.MinMax.MAX));
+		}
+
+		if (spawner.contains("delay.min")) {
+			matchers.add(new ItemMobSpawnerSpawnDelayMatcher(parseAmount(spawner, "delay.min"),
+					ItemMobSpawnerSpawnDelayMatcher.MinMax.MIN));
+		}
+
+		if (spawner.contains("mob")) {
+			matchers.add(new ItemMobSpawnerSpawnedMobMatcher(parseEnumMatcher(spawner, "mob", EntityType.class)));
+		} else if (spawner.contains("entity")) {
+			// duplicate of "mob", for completeness
+			matchers.add(new ItemMobSpawnerSpawnedMobMatcher(parseEnumMatcher(spawner, "entity", EntityType.class)));
+		}
+
+		if (spawner.contains("radius")) {
+			matchers.add(new ItemMobSpawnerSpawnRadiusMatcher(parseAmount(spawner, "radius")));
+		}
+
+		return matchers;
+	}
 
 	/**
 	 * Runs this ItemExpression on a given ItemStack.
