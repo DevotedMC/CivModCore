@@ -3,7 +3,6 @@ package vg.civcraft.mc.civmodcore.itemHandling.itemExpression.color;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.DyeColor;
-import org.bukkit.inventory.ItemFactory;
 
 /**
  * @author Ameliorate
