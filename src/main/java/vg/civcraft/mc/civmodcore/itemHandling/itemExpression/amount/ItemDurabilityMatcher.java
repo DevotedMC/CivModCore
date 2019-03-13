@@ -12,6 +12,13 @@ public class ItemDurabilityMatcher implements ItemMatcher {
 		this.matcher = matcher;
 	}
 
+	public static ItemDurabilityMatcher construct(AmountMatcher matcher) {
+		if (matcher == null)
+			return null;
+
+		return new ItemDurabilityMatcher(matcher);
+	}
+
 	public AmountMatcher matcher;
 
 	@Override

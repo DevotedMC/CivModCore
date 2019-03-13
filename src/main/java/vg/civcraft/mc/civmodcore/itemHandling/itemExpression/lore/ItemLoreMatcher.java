@@ -11,6 +11,13 @@ public class ItemLoreMatcher implements ItemMatcher {
 		this.matcher = matcher;
 	}
 
+	public static ItemLoreMatcher construct(LoreMatcher matcher) {
+		if (matcher == null)
+			return null;
+
+		return new ItemLoreMatcher(matcher);
+	}
+
 	public LoreMatcher matcher;
 
 	@Override

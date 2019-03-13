@@ -11,6 +11,13 @@ public class ItemNameMatcher implements ItemMatcher {
 		this.matcher = matcher;
 	}
 
+	public static ItemNameMatcher construct(NameMatcher matcher) {
+		if (matcher == null)
+			return null;
+
+		return new ItemNameMatcher(matcher);
+	}
+
 	public NameMatcher matcher;
 
 	@Override

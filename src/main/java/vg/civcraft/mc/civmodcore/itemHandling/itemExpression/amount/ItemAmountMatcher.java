@@ -13,6 +13,13 @@ public class ItemAmountMatcher implements ItemMatcher, ItemMapMatcher {
 		this.matcher = matcher;
 	}
 
+	public static ItemAmountMatcher construct(AmountMatcher matcher) {
+		if (matcher == null)
+			return null;
+
+		return new ItemAmountMatcher(matcher);
+	}
+
 	public AmountMatcher matcher;
 
 	@Override

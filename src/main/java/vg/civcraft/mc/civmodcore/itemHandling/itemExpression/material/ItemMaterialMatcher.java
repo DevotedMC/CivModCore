@@ -11,6 +11,13 @@ public class ItemMaterialMatcher implements ItemMatcher {
 		this.matcher = matcher;
 	}
 
+	public static ItemMaterialMatcher construct(MaterialMatcher matcher) {
+		if (matcher == null)
+			return null;
+
+		return new ItemMaterialMatcher(matcher);
+	}
+
 	public MaterialMatcher matcher;
 
 	@Override

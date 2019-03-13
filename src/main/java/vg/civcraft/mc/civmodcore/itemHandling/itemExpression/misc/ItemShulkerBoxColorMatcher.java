@@ -15,6 +15,13 @@ public class ItemShulkerBoxColorMatcher implements ItemMatcher {
 		this.color = color;
 	}
 
+	public static ItemShulkerBoxColorMatcher construct(EnumMatcher<DyeColor> color) {
+		if (color == null)
+			return null;
+
+		return new ItemShulkerBoxColorMatcher(color);
+	}
+
 	public EnumMatcher<DyeColor> color;
 
 	@Override

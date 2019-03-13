@@ -14,6 +14,13 @@ public class ItemLeatherArmorColorMatcher implements ItemMatcher {
 		this.color = color;
 	}
 
+	public static ItemLeatherArmorColorMatcher construct(ColorMatcher color) {
+		if (color == null)
+			return null;
+
+		return new ItemLeatherArmorColorMatcher(color);
+	}
+
 	public ColorMatcher color;
 
 	@Override

@@ -99,19 +99,19 @@ public class ItemExpression {
 	 */
 	public void parseConfig(ConfigurationSection config) {
 		// material
-		addMatcher(new ItemMaterialMatcher(parseMaterial(config, "material")));
+		addMatcher(ItemMaterialMatcher.construct(parseMaterial(config, "material")));
 
 		// amount
-		addMatcher(new ItemAmountMatcher(parseAmount(config, "amount")));
+		addMatcher(ItemAmountMatcher.construct(parseAmount(config, "amount")));
 
 		// durability
-		addMatcher(new ItemDurabilityMatcher(parseAmount(config, "durability")));
+		addMatcher(ItemDurabilityMatcher.construct(parseAmount(config, "durability")));
 
 		// lore
-		addMatcher(new ItemLoreMatcher(parseLore(config, "lore")));
+		addMatcher(ItemLoreMatcher.construct(parseLore(config, "lore")));
 
 		// display name
-		addMatcher(new ItemNameMatcher(parseName(config, "name")));
+		addMatcher(ItemNameMatcher.construct(parseName(config, "name")));
 
 		// enchantments (example: eff5 diamond pickaxe)
 		addMatcher(parseEnchantment(config, "enchantmentsAny", ANY, ITEM));
@@ -126,7 +126,7 @@ public class ItemExpression {
 		addMatcher(parseEnchangmentCount(config, "enchantmentHeldCount", HELD));
 
 		// skull
-		addMatcher(new ItemSkullMatcher(parseSkull(config, "skull")));
+		addMatcher(ItemSkullMatcher.construct(parseSkull(config, "skull")));
 
 		// item flags (https://hub.spigotmc.org/javadocs/spigot/org/bukkit/inventory/ItemFlag.html)
 		addMatcher(parseFlags(config, "flags"));
@@ -139,7 +139,7 @@ public class ItemExpression {
 		addMatcher(parseInventory(config, "shulkerbox.inventory"));
 
 		// shulker box color
-		addMatcher(new ItemShulkerBoxColorMatcher(parseEnumMatcher(config, "shulkerbox.color", DyeColor.class)));
+		addMatcher(ItemShulkerBoxColorMatcher.construct(parseEnumMatcher(config, "shulkerbox.color", DyeColor.class)));
 
 		// written book
 		addMatcher(parseBook(config, "book"));
@@ -161,7 +161,7 @@ public class ItemExpression {
 		addMatcher(parseTropicFishBucket(config, "tropicalFishBucket"));
 
 		// leather armor color
-		addMatcher(new ItemLeatherArmorColorMatcher(parseColor(config, "leatherArmorColor")));
+		addMatcher(ItemLeatherArmorColorMatcher.construct(parseColor(config, "leatherArmorColor")));
 
 		// map
 		addMatcher(parseMap(config, "map"));

@@ -16,6 +16,13 @@ public class ItemSkullMatcher implements ItemMatcher {
 		this.ownerMatcher = ownerMatcher;
 	}
 
+	public static ItemSkullMatcher construct(List<UUIDMatcher> ownerMatcher) {
+		if (ownerMatcher == null || ownerMatcher.isEmpty())
+			return null;
+
+		return new ItemSkullMatcher(ownerMatcher);
+	}
+
 	public List<UUIDMatcher> ownerMatcher;
 
 	@Override
