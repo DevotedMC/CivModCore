@@ -98,32 +98,72 @@ public class ItemExpression {
 	 * @param config The config that options will be taken from.
 	 */
 	public void parseConfig(ConfigurationSection config) {
+		// material
 		addMatcher(new ItemMaterialMatcher(parseMaterial(config, "material")));
+
+		// amount
 		addMatcher(new ItemAmountMatcher(parseAmount(config, "amount")));
+
+		// durability
 		addMatcher(new ItemDurabilityMatcher(parseAmount(config, "durability")));
+
+		// lore
 		addMatcher(new ItemLoreMatcher(parseLore(config, "lore")));
+
+		// display name
 		addMatcher(new ItemNameMatcher(parseName(config, "name")));
+
+		// enchantments (example: eff5 diamond pickaxe)
 		addMatcher(parseEnchantment(config, "enchantmentsAny", ANY, ITEM));
 		addMatcher(parseEnchantment(config, "enchantmentsAll", ALL, ITEM));
 		addMatcher(parseEnchantment(config, "enchantmentsNone", NONE, ITEM));
 		addMatcher(parseEnchangmentCount(config, "enchantmentCount", ITEM));
+
+		// held enchantments (example: enchanted book)
 		addMatcher(parseEnchantment(config, "enchantmentsHeldAny", ANY, HELD));
 		addMatcher(parseEnchantment(config, "enchantmentsHeldAll", ALL, HELD));
 		addMatcher(parseEnchantment(config, "enchantmentsHeldNone", NONE, HELD));
 		addMatcher(parseEnchangmentCount(config, "enchantmentHeldCount", HELD));
+
+		// skull
 		addMatcher(new ItemSkullMatcher(parseSkull(config, "skull")));
+
+		// item flags (https://hub.spigotmc.org/javadocs/spigot/org/bukkit/inventory/ItemFlag.html)
 		addMatcher(parseFlags(config, "flags"));
+
+		// unbreakable
 		addMatcher(parseUnbreakable(config, "unbreakable"));
+
+		// held inventory (example: shulker box)
 		addMatcher(parseInventory(config, "inventory"));
-		addMatcher(parseBook(config, "book"));
-		addMatcher(parseExactly(config, "exactly"));
+		addMatcher(parseInventory(config, "shulkerbox.inventory"));
+
+		// shulker box color
 		addMatcher(new ItemShulkerBoxColorMatcher(parseEnumMatcher(config, "shulkerbox.color", DyeColor.class)));
+
+		// written book
+		addMatcher(parseBook(config, "book"));
+
+		// exact item stack
+		addMatcher(parseExactly(config, "exactly"));
+
+		// knowlege book (creative item that holds recipe unlocks)
 		addMatcher(parseKnowlegeBook(config, "knowlegebook.recipesAny", false));
 		addMatcher(parseKnowlegeBook(config, "knowlegebook.recipesAll", true));
+
+		// potion
 		addMatcher(parsePotion(config, "potion"));
+
+		// attributes
 		addMatcher(parseAllAttributes(config, "attributes"));
+
+		// tropical fish bucket (added in 1.13)
 		addMatcher(parseTropicFishBucket(config, "tropicalFishBucket"));
-		addMatcher(parseLeatherColor(config, "leatherArmorColor"));
+
+		// leather armor color
+		addMatcher(new ItemLeatherArmorColorMatcher(parseColor(config, "leatherArmorColor")));
+
+		// map
 		addMatcher(parseMap(config, "map"));
 	}
 
@@ -572,13 +612,6 @@ public class ItemExpression {
 		return new ListColor(((List<?>) config).stream()
 				.map(this::parseColor)
 				.collect(Collectors.toList()), false);
-	}
-
-	private ItemLeatherArmorColorMatcher parseLeatherColor(ConfigurationSection config, String path) {
-		if (!config.contains(path))
-			return null;
-
-		return new ItemLeatherArmorColorMatcher(parseColor(config, path));
 	}
 
 	private List<ItemMatcher> parseMap(ConfigurationSection config, String path) {
