@@ -967,6 +967,9 @@ public class ItemExpression {
 	 *                 item. If this list contains any null elements, those null elements will be ignored.
 	 */
 	public <T extends ItemMatcher> void addMatcher(Collection<T> matchers) {
+		if (matchers == null)
+			return;
+
 		matchers.forEach(this::addMatcher);
 	}
 
