@@ -1,5 +1,6 @@
 package vg.civcraft.mc.civmodcore.itemHandling.itemExpression;
 
+import org.bukkit.Color;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
@@ -14,6 +15,9 @@ import org.bukkit.potion.PotionType;
 import vg.civcraft.mc.civmodcore.itemHandling.ItemMap;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.book.*;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.color.ColorMatcher;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.color.ExactlyColor;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.color.ListColor;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enchantment.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enummatcher.EnumFromListMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enummatcher.EnumIndexMatcher;
@@ -493,6 +497,77 @@ public class ItemExpression {
 		} else {
 			return new NameEnumMatcher<>(parseName(config, path, false));
 		}
+	}
+
+	private ColorMatcher parseColor(ConfigurationSection config, String path) {
+		if (!config.contains(path))
+			return null;
+
+		return parseColor(config.get(path));
+	}
+
+	private ColorMatcher parseColor(Object config) {
+		if (config == null)
+			return null;
+
+		if (config instanceof String) {
+			// vanilla dye name
+			return new ExactlyColor(ExactlyColor.getColorByVanillaName((String) config));
+
+		} else if (config instanceof Integer) {
+			// rgb color
+			return new ExactlyColor(Color.fromRGB((Integer) config));
+
+		} else if (config instanceof List) {
+			// any of matchers in list
+			return parseListColor((List<?>) config);
+
+		} else if (config instanceof Map) {
+			if (((Map) config).containsKey("rgb")) {
+				// rgb int or [r, g, b]
+				Object rgb = ((Map) config).get("rgb");
+
+				if (rgb instanceof Integer) {
+					// rgb int
+					return new ExactlyColor(Color.fromRGB((Integer) rgb));
+				} else if (rgb instanceof List) {
+					// [r, g, b]
+					int red = (int) ((List) rgb).get(0);
+					int green = (int) ((List) rgb).get(1);
+					int blue = (int) ((List) rgb).get(2);
+					return new ExactlyColor(Color.fromRGB(red, green, blue));
+				}
+
+			} else if (((Map) config).containsKey("html")) {
+				// html color name
+				String htmlColorName = (String) ((Map) config).get("html");
+				return new ExactlyColor(ExactlyColor.getColorByHTMLName(htmlColorName));
+
+			} else if (((Map) config).containsKey("firework")) {
+				// firework vanilla dye name
+				String fireworkDyeColorName = (String) ((Map) config).get("firework");
+				return new ExactlyColor(ExactlyColor.getColorByVanillaName(fireworkDyeColorName, true));
+
+			} else if (((Map) config).containsKey("anyOf")) {
+				// any of matchers in list
+				return parseListColor((List<?>) ((Map) config).get("anyOf"));
+
+			} else if (((Map) config).containsKey("noneOf")) {
+				// none of matchers in list
+				return parseListColor((List<?>) ((Map) config).get("noneOf"));
+			}
+		}
+
+		return null;
+	}
+
+	private ListColor parseListColor(List<?> config) {
+		if (config == null)
+			return null;
+
+		return new ListColor(((List<?>) config).stream()
+				.map(this::parseColor)
+				.collect(Collectors.toList()), false);
 	}
 
 	/**
