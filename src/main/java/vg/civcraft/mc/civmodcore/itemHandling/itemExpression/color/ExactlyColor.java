@@ -1,7 +1,9 @@
 package vg.civcraft.mc.civmodcore.itemHandling.itemExpression.color;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.DyeColor;
+import org.bukkit.inventory.ItemFactory;
 
 /**
  * @author Ameliorate
@@ -53,6 +55,10 @@ public class ExactlyColor implements ColorMatcher {
 	 *                         wool and other items.
 	 */
 	public static Color getColorByVanillaName(String name, boolean useFireworkColor) {
+		if ("defaultLeather".equals(name)) {
+			return Bukkit.getServer().getItemFactory().getDefaultLeatherColor();
+		}
+
 		DyeColor color = DyeColor.valueOf(name.toUpperCase());
 		return useFireworkColor ? color.getFireworkColor() : color.getColor();
 	}

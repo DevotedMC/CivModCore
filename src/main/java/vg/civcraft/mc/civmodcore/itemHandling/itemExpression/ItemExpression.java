@@ -121,6 +121,7 @@ public class ItemExpression {
 		parsePotion(config, "potion").forEach(this::addMatcher);
 		parseAllAttributes(config, "attributes").forEach(this::addMatcher);
 		parseTropicFishBucket(config, "tropicalFishBucket").forEach(this::addMatcher);
+		addMatcher(parseLeatherColor(config, "leatherArmorColor"));
 	}
 
 	/**
@@ -568,6 +569,13 @@ public class ItemExpression {
 		return new ListColor(((List<?>) config).stream()
 				.map(this::parseColor)
 				.collect(Collectors.toList()), false);
+	}
+
+	private ItemLeatherArmorColorMatcher parseLeatherColor(ConfigurationSection config, String path) {
+		if (!config.contains(path))
+			return null;
+
+		return new ItemLeatherArmorColorMatcher(parseColor(config, path));
 	}
 
 	/**
