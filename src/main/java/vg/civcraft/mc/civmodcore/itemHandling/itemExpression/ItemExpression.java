@@ -112,19 +112,19 @@ public class ItemExpression {
 		addMatcher(parseEnchantment(config, "enchantmentsHeldNone", NONE, HELD));
 		addMatcher(parseEnchangmentCount(config, "enchantmentHeldCount", HELD));
 		addMatcher(new ItemSkullMatcher(parseSkull(config, "skull")));
-		parseFlags(config, "flags").forEach(this::addMatcher);
+		addMatcher(parseFlags(config, "flags"));
 		addMatcher(parseUnbreakable(config, "unbreakable"));
 		addMatcher(parseInventory(config, "inventory"));
-		parseBook(config, "book").forEach(this::addMatcher);
+		addMatcher(parseBook(config, "book"));
 		addMatcher(parseExactly(config, "exactly"));
 		addMatcher(new ItemShulkerBoxColorMatcher(parseEnumMatcher(config, "shulkerbox.color", DyeColor.class)));
 		addMatcher(parseKnowlegeBook(config, "knowlegebook.recipesAny", false));
 		addMatcher(parseKnowlegeBook(config, "knowlegebook.recipesAll", true));
-		parsePotion(config, "potion").forEach(this::addMatcher);
-		parseAllAttributes(config, "attributes").forEach(this::addMatcher);
-		parseTropicFishBucket(config, "tropicalFishBucket").forEach(this::addMatcher);
+		addMatcher(parsePotion(config, "potion"));
+		addMatcher(parseAllAttributes(config, "attributes"));
+		addMatcher(parseTropicFishBucket(config, "tropicalFishBucket"));
 		addMatcher(parseLeatherColor(config, "leatherArmorColor"));
-		parseMap(config, "map").forEach(this::addMatcher);
+		addMatcher(parseMap(config, "map"));
 	}
 
 	/**
@@ -873,6 +873,15 @@ public class ItemExpression {
 	public void addMatcher(ItemMatcher matcher) {
 		if (matcher != null)
 			matchers.add(matcher);
+	}
+
+	/**
+	 * Add a number of properties if the item to be checked, using a number of ItemMatchers.
+	 * @param matchers The list of ItemMatchers that will be added to the list of ItemMatchers to check aganst a given
+	 *                 item. If this list contains any null elements, those null elements will be ignored.
+	 */
+	public <T extends ItemMatcher> void addMatcher(Collection<T> matchers) {
+		matchers.forEach(this::addMatcher);
 	}
 
 	/**
