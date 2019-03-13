@@ -10,6 +10,7 @@ import org.bukkit.configuration.MemoryConfiguration;
 import org.bukkit.entity.TropicalFish;
 import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.*;
+import org.bukkit.map.MapView;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 import vg.civcraft.mc.civmodcore.itemHandling.ItemMap;
@@ -23,6 +24,7 @@ import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enummatcher.EnumFro
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enummatcher.EnumIndexMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enummatcher.EnumMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enummatcher.NameEnumMatcher;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.map.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc.ItemExactlyInventoryMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.lore.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.*;
@@ -122,6 +124,7 @@ public class ItemExpression {
 		parseAllAttributes(config, "attributes").forEach(this::addMatcher);
 		parseTropicFishBucket(config, "tropicalFishBucket").forEach(this::addMatcher);
 		addMatcher(parseLeatherColor(config, "leatherArmorColor"));
+		parseMap(config, "map").forEach(this::addMatcher);
 	}
 
 	/**
@@ -577,6 +580,61 @@ public class ItemExpression {
 
 		return new ItemLeatherArmorColorMatcher(parseColor(config, path));
 	}
+
+	private List<ItemMatcher> parseMap(ConfigurationSection config, String path) {
+		if (!config.isConfigurationSection(path))
+			return Collections.emptyList();
+
+		List<ItemMatcher> matchers = new ArrayList<>();
+
+		ConfigurationSection map = config.getConfigurationSection(path);
+
+		if (map.contains("center.x")) {
+			matchers.add(new ItemMapViewMatcher(new CenterMapView(parseAmount(map, "center.x"),
+					CenterMapView.CenterCoordinate.X)));
+		}
+
+		if (map.contains("center.z")) {
+			matchers.add(new ItemMapViewMatcher(new CenterMapView(parseAmount(map, "center.z"),
+					CenterMapView.CenterCoordinate.Z)));
+		}
+
+		if (map.contains("id")) {
+			matchers.add(new ItemMapViewMatcher(new IDMapView(parseAmount(map, "id"))));
+		}
+
+		if (map.isBoolean("isUnlimitedTracking")) {
+			matchers.add(new ItemMapViewMatcher(new IsUnlimitedTrackingMapView(map.getBoolean("isUnlimitedTracking"))));
+		}
+
+		if (map.isBoolean("isVirtual")) {
+			matchers.add(new ItemMapViewMatcher(new IsVirtualMapView(map.getBoolean("isVirtual"))));
+		}
+
+		if (map.contains("scale")) {
+			matchers.add(new ItemMapViewMatcher(new ScaleMapView(
+					parseEnumMatcher(map, "scale", MapView.Scale.class))));
+		}
+
+		if (map.contains("world")) {
+			matchers.add(new ItemMapViewMatcher(new WorldMapView(parseName(map, "world"))));
+		}
+
+		if (map.contains("color")) {
+			matchers.add(new ItemMapColorMatcher(parseColor(map, "color")));
+		}
+
+		if (map.isBoolean("isScaling")) {
+			matchers.add(new ItemMapIsScalingMatcher(map.getBoolean("isScaling")));
+		}
+
+		if (map.contains("location")) {
+			matchers.add(new ItemMapLocationMatcher(parseName(map, "location")));
+		}
+
+		return matchers;
+	}
+
 
 	/**
 	 * Runs this ItemExpression on a given ItemStack.
