@@ -41,22 +41,6 @@ public class ItemPotionEffectsMatcher implements ItemMatcher {
 	}
 
 	public boolean matches(List<PotionEffect> effects) {
-		Stream<PotionEffectMatcher> enchantmentMatcherStream = potionMatchers.stream();
-		Predicate<PotionEffectMatcher> predicate = (potionMatcher) -> effects.stream().anyMatch(potionMatcher::matches);
-
-		switch (mode) {
-			// Normally there'd be a break statement after each of the return's, but java complains because the break's
-			// are technically unreachable.
-			case ANY:
-				return enchantmentMatcherStream.anyMatch(predicate);
-			case ALL:
-				return enchantmentMatcherStream.allMatch(predicate);
-			case NONE:
-				return enchantmentMatcherStream.noneMatch(predicate);
-		}
-
-		throw new AssertionError("not reachable");
-		// naturally, it complains here because it can't figure out that the switch above always returns, so we don't
-		// need a return statement here.
+		return mode.matches(potionMatchers, effects);
 	}
 }

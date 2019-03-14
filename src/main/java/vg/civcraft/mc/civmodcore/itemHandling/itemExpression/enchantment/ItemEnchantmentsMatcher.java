@@ -8,8 +8,6 @@ import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc.ListMatchingMo
 
 import java.util.List;
 import java.util.Map;
-import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 /**
  * @author Ameliorate
@@ -40,30 +38,9 @@ public class ItemEnchantmentsMatcher implements ItemMatcher {
 				return matches(((EnchantmentStorageMeta) item.getItemMeta()).getStoredEnchants());
 		}
 		throw new AssertionError("not reachable");
-		// see the below function for the coy remarks
 	}
 
 	public boolean matches(Map<Enchantment, Integer> enchantments) {
-		Stream<EnchantmentMatcher> enchantmentMatcherStream = enchantmentMatchers.stream();
-		Predicate<EnchantmentMatcher> predicate = (enchantmentMatcher) -> enchantments.entrySet().stream().anyMatch((e) ->  {
-			Enchantment enchantment = e.getKey();
-			int level = e.getValue();
-			return enchantmentMatcher.matches(enchantment, level);
-		});
-
-		switch (mode) {
-			// Normally there'd be a break statement after each of the return's, but java complains because the break's
-			// are technically unreachable.
-			case ANY:
-				return enchantmentMatcherStream.anyMatch(predicate);
-			case ALL:
-				return enchantmentMatcherStream.allMatch(predicate);
-			case NONE:
-				return enchantmentMatcherStream.noneMatch(predicate);
-		}
-
-		throw new AssertionError("not reachable");
-		// naturally, it complains here because it can't figure out that the switch above always returns, so we don't
-		// need a return statement here.
+		return mode.matches(enchantmentMatchers, enchantments.entrySet());
 	}
 }

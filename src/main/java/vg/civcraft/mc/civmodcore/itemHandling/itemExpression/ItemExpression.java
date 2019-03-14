@@ -471,14 +471,14 @@ public class ItemExpression {
 
 		for (ListMatchingMode mode : ListMatchingMode.values()) {
 			for (EquipmentSlot slot : EquipmentSlot.values()) {
-				String modeString = mode.toString().toLowerCase();
+				String modeString = mode.getLowerCamelCase();
 
 				matchers.add(parseAttributes(config, path + "." + slot + "." + modeString, slot, mode));
 			}
 		}
 
 		for (ListMatchingMode mode : ListMatchingMode.values()) {
-			matchers.add(parseAttributes(config, path + ".any." + mode, null, mode));
+			matchers.add(parseAttributes(config, path + ".any." + mode.getLowerCamelCase(), null, mode));
 		}
 
 		return matchers;

@@ -11,6 +11,7 @@ import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.name.NameMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.uuid.UUIDMatcher;
 
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 
 /**
@@ -37,26 +38,10 @@ public class ItemAttributeMatcher implements ItemMatcher {
 		if (!item.hasItemMeta() || !item.getItemMeta().hasAttributeModifiers())
 			return false;
 
-		return item.getItemMeta().getAttributeModifiers(slot).entries().stream().anyMatch((e) -> {
-			Attribute attribute = e.getKey();
-			AttributeModifier modifier = e.getValue();
-
-			Predicate<AttributeMatcher> matcherMatchesPredicate = (matcher) -> matcher.matches(attribute, modifier);
-
-			switch (mode) {
-				case ANY:
-					return matchers.stream().anyMatch(matcherMatchesPredicate);
-				case ALL:
-					return matchers.stream().allMatch(matcherMatchesPredicate);
-				case NONE:
-					return matchers.stream().noneMatch(matcherMatchesPredicate);
-			}
-
-			throw new AssertionError("not reachable");
-		});
+		return mode.matches(matchers, item.getItemMeta().getAttributeModifiers(slot).entries());
 	}
 
-	public static class AttributeMatcher {
+	public static class AttributeMatcher implements GenericMatcher<Map.Entry<Attribute, AttributeModifier>> {
 		public AttributeMatcher(EnumMatcher<Attribute> attribute,
 								NameMatcher name, EnumMatcher<AttributeModifier.Operation> operation,
 								UUIDMatcher uuid, AmountMatcher amount) {
@@ -86,6 +71,11 @@ public class ItemAttributeMatcher implements ItemMatcher {
 				return false;
 			else
 				return true;
+		}
+
+		@Override
+		public boolean genericMatches(Map.Entry<Attribute, AttributeModifier> matched) {
+			return matches(matched.getKey(), matched.getValue());
 		}
 	}
 }
