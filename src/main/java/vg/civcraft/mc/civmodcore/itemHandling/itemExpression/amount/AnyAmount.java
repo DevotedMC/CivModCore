@@ -7,7 +7,7 @@ package vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount;
  */
 public class AnyAmount implements AmountMatcher {
 	@Override
-	public boolean matches(double amount) {
+	public boolean matches(Double amount) {
 		return true;
 	}
 }

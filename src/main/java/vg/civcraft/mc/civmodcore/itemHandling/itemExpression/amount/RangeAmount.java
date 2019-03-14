@@ -44,7 +44,7 @@ public class RangeAmount implements AmountMatcher {
 	}
 
 	@Override
-	public boolean matches(double amount) {
+	public boolean matches(Double amount) {
 		if (lowInclusive) {
 			if (amount < low)
 				return false;

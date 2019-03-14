@@ -1,7 +1,6 @@
 package vg.civcraft.mc.civmodcore.itemHandling.itemExpression;
 
 import org.bukkit.inventory.ItemStack;
-import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc.GenericMatcher;
 
 /**
  * Represents a single property of an item that should be checked.
@@ -10,11 +9,5 @@ import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc.GenericMatcher
  *
  * @author Ameliorate
  */
-public interface ItemMatcher extends GenericMatcher<ItemStack> {
-	boolean matches(ItemStack item);
-
-	@Override
-	default boolean genericMatches(ItemStack matched) {
-		return matches(matched);
-	}
+public interface ItemMatcher extends Matcher<ItemStack> {
 }

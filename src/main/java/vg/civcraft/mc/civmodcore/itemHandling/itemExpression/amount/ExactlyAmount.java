@@ -13,7 +13,7 @@ public class ExactlyAmount implements AmountMatcher {
 	public double amount;
 
 	@Override
-	public boolean matches(double amount) {
+	public boolean matches(Double amount) {
 		return this.amount == amount;
 	}
 }

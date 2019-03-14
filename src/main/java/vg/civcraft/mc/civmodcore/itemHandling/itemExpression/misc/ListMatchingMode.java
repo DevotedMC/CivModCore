@@ -1,6 +1,7 @@
 package vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc;
 
 import com.google.common.collect.Lists;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.Matcher;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -78,9 +79,9 @@ public enum ListMatchingMode {
 	 * @param <M> The type of each matcher.
 	 * @return If the list of matchers matched over the list of things, in the order that was defined in this ListMatchingMode.
 	 */
-	public <T, M extends GenericMatcher<T>> boolean matches(Collection<M> matchers, Collection<T> matched) {
+	public <T, M extends Matcher<T>> boolean matches(Collection<M> matchers, Collection<T> matched) {
 		Stream<M> matcherStream = matchers.stream();
-		Predicate<M> matchedPredicate = (matcher) -> matched.stream().anyMatch(matcher::genericMatches);
+		Predicate<M> matchedPredicate = (matcher) -> matched.stream().anyMatch(matcher::matches);
 
 		switch (this) {
 			case ANY:
@@ -97,7 +98,7 @@ public enum ListMatchingMode {
 					boolean hasMatched = false;
 
 					for (T matchedElement : matchedClone) {
-						if (matcher.genericMatches(matchedElement)) {
+						if (matcher.matches(matchedElement)) {
 							matchedClone.remove(matchedElement);
 							matchersClone.remove(matcher);
 							hasMatched = true;

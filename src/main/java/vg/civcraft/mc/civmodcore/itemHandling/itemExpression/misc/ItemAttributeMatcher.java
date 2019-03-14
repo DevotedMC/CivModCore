@@ -5,6 +5,7 @@ import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.ItemMatcher;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.Matcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount.AmountMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enummatcher.EnumMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.name.NameMatcher;
@@ -12,7 +13,6 @@ import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.uuid.UUIDMatcher;
 
 import java.util.List;
 import java.util.Map;
-import java.util.function.Predicate;
 
 /**
  * Matches over the attributes of an item that apply for a given slot.
@@ -41,7 +41,7 @@ public class ItemAttributeMatcher implements ItemMatcher {
 		return mode.matches(matchers, item.getItemMeta().getAttributeModifiers(slot).entries());
 	}
 
-	public static class AttributeMatcher implements GenericMatcher<Map.Entry<Attribute, AttributeModifier>> {
+	public static class AttributeMatcher implements Matcher<Map.Entry<Attribute, AttributeModifier>> {
 		public AttributeMatcher(EnumMatcher<Attribute> attribute,
 								NameMatcher name, EnumMatcher<AttributeModifier.Operation> operation,
 								UUIDMatcher uuid, AmountMatcher amount) {
@@ -74,7 +74,7 @@ public class ItemAttributeMatcher implements ItemMatcher {
 		}
 
 		@Override
-		public boolean genericMatches(Map.Entry<Attribute, AttributeModifier> matched) {
+		public boolean matches(Map.Entry<Attribute, AttributeModifier> matched) {
 			return matches(matched.getKey(), matched.getValue());
 		}
 	}
