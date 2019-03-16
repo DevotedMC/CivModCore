@@ -234,8 +234,8 @@ public class ItemExpression {
 	private Optional<AmountMatcher> parseAmount(ConfigurationSection config, String path) {
 		if (config.contains(path + ".range"))
 			return Optional.of((new RangeAmount(
-					config.getDouble(path + ".range.low", 0),
-					config.getDouble(path + ".range.high"),
+					config.getDouble(path + ".range.low", Double.NEGATIVE_INFINITY),
+					config.getDouble(path + ".range.high", Double.POSITIVE_INFINITY),
 					config.getBoolean(path + ".range.inclusiveLow", true),
 					config.getBoolean(path + ".range.inclusiveHigh", true))));
 		else if ("any".equals(config.getString(path)))
