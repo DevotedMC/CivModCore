@@ -51,7 +51,7 @@ import static vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc.ListMat
  *
  * @author Ameliorate
  */
-public class ItemExpression {
+public class ItemExpression implements Matcher<ItemStack> {
 	/**
 	 * Creates the default ItemExpression.
 	 *
