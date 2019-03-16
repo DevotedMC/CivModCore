@@ -2,6 +2,7 @@ package vg.civcraft.mc.civmodcore.itemHandling.itemExpression;
 
 import org.bukkit.Color;
 import org.bukkit.DyeColor;
+import org.bukkit.FireworkEffect;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
@@ -25,6 +26,7 @@ import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enummatcher.EnumFro
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enummatcher.EnumIndexMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enummatcher.EnumMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enummatcher.NameEnumMatcher;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.firework.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.map.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc.ItemExactlyInventoryMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.lore.*;
@@ -170,6 +172,12 @@ public class ItemExpression {
 
 		// mob spawner
 		addMatcher(parseMobSpawner(config, "spawner"));
+
+		// firework holder (example: firework star)
+		addMatcher(ItemFireworkEffectHolderMatcher.construct(parseFireworkEffect(config, "fireworkEffectHolder")));
+
+		// firework
+		addMatcher(parseFirework(config, "firework"));
 	}
 
 	/**
@@ -718,6 +726,80 @@ public class ItemExpression {
 		if (spawner.contains("radius")) {
 			matchers.add(new ItemMobSpawnerSpawnRadiusMatcher(parseAmount(spawner, "radius")));
 		}
+
+		return matchers;
+	}
+
+	private FireworkEffectMatcher parseFireworkEffect(ConfigurationSection config, String path) {
+		if (!config.isConfigurationSection(path))
+			return null;
+
+		ConfigurationSection fireworkEffect = config.getConfigurationSection(path);
+
+		// effect base color
+		List<ColorMatcher> colors = new ArrayList<>();
+		ListMatchingMode colorsMode = ListMatchingMode.valueOf(fireworkEffect.getString("colorsMode", "ANY").toUpperCase());
+
+		if (fireworkEffect.isList("colors")) {
+			for (Object color : fireworkEffect.getList("colors")) {
+				colors.add(parseColor(color));
+			}
+		}
+
+		colors.add(parseColor(fireworkEffect, "color"));
+
+		List<ColorMatcher> fadeColors = new ArrayList<>();
+		ListMatchingMode fadeColorsMode = ListMatchingMode.valueOf(fireworkEffect.getString("fadeColorsMode", "ANY").toUpperCase());
+
+		if (fireworkEffect.isList("fadeColors")) {
+			for (Object color : fireworkEffect.getList("fadeColors")) {
+				fadeColors.add(parseColor(color));
+			}
+		}
+
+		fadeColors.add(parseColor(fireworkEffect, "fadeColor"));
+
+		EnumMatcher<FireworkEffect.Type> type = parseEnumMatcher(fireworkEffect, "type", FireworkEffect.Type.class);
+
+		Optional<Boolean> hasFlicker = Optional.empty();
+		if (fireworkEffect.isBoolean("hasFlicker")) {
+			hasFlicker = Optional.of(fireworkEffect.getBoolean("hasFlicker"));
+		}
+
+		Optional<Boolean> hasTrail = Optional.empty();
+		if (fireworkEffect.isBoolean("hasTrail")) {
+			hasTrail = Optional.of(fireworkEffect.getBoolean("hasTrail"));
+		}
+
+		return new ExactlyFireworkEffect(type, colors, colorsMode, fadeColors, fadeColorsMode, hasFlicker, hasTrail);
+	}
+
+	private List<ItemMatcher> parseFirework(ConfigurationSection config, String path) {
+		if (!config.isConfigurationSection(path))
+			return null;
+
+		ConfigurationSection firework = config.getConfigurationSection(path);
+		ArrayList<ItemMatcher> matchers = new ArrayList<>();
+
+		for (ListMatchingMode mode : ListMatchingMode.values()) {
+			ArrayList<FireworkEffectMatcher> effectMatchers = new ArrayList<>();
+
+			for (ConfigurationSection effect : getConfigList(firework, "effects" + mode.getUpperCamelCase())) {
+				FireworkEffectMatcher matcher = parseFireworkEffect(effect, "");
+				effectMatchers.add(matcher);
+			}
+
+			if (!effectMatchers.isEmpty())
+				matchers.add(new ItemFireworkEffectsMatcher(effectMatchers, mode));
+		}
+
+		AmountMatcher power = parseAmount(firework, "power");
+		if (power != null)
+			matchers.add(new ItemFireworkPowerMatcher(power));
+
+		AmountMatcher effectsCount = parseAmount(firework, "effectsCount");
+		if (effectsCount != null)
+			matchers.add(new ItemFireworkEffectsCountMatcher(effectsCount));
 
 		return matchers;
 	}
