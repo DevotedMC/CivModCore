@@ -5,6 +5,8 @@ import vg.civcraft.mc.civmodcore.itemHandling.ItemMap;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.ItemMapMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.ItemMatcher;
 
+import java.util.Optional;
+
 /**
  * @author Ameliorate
  */
@@ -13,11 +15,8 @@ public class ItemAmountMatcher implements ItemMatcher, ItemMapMatcher {
 		this.matcher = matcher;
 	}
 
-	public static ItemAmountMatcher construct(AmountMatcher matcher) {
-		if (matcher == null)
-			return null;
-
-		return new ItemAmountMatcher(matcher);
+	public static ItemAmountMatcher construct(Optional<AmountMatcher> matcher) {
+		return matcher.map(ItemAmountMatcher::new).orElse(null);
 	}
 
 	public AmountMatcher matcher;

@@ -6,12 +6,18 @@ import org.bukkit.inventory.meta.TropicalFishBucketMeta;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.ItemMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enummatcher.EnumMatcher;
 
+import java.util.Optional;
+
 /**
  * @author Ameliorate
  */
 public class ItemTropicFishBPatternColorMatcher implements ItemMatcher {
 	public ItemTropicFishBPatternColorMatcher(EnumMatcher<DyeColor> color) {
 		this.color = color;
+	}
+
+	public static ItemTropicFishBPatternColorMatcher construct(Optional<EnumMatcher<DyeColor>> color) {
+		return color.map(ItemTropicFishBPatternColorMatcher::new).orElse(null);
 	}
 
 	public EnumMatcher<DyeColor> color;

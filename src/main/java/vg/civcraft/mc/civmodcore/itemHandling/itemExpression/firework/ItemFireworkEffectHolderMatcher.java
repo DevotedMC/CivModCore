@@ -4,6 +4,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.FireworkEffectMeta;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.ItemMatcher;
 
+import java.util.Optional;
+
 /**
  * @author Ameliorate
  */
@@ -12,11 +14,8 @@ public class ItemFireworkEffectHolderMatcher implements ItemMatcher {
 		this.effect = effect;
 	}
 
-	public static ItemFireworkEffectHolderMatcher construct(FireworkEffectMatcher effect) {
-		if (effect != null)
-			return null;
-
-		return new ItemFireworkEffectHolderMatcher(effect);
+	public static ItemFireworkEffectHolderMatcher construct(Optional<FireworkEffectMatcher> effect) {
+		return effect.map(ItemFireworkEffectHolderMatcher::new).orElse(null);
 	}
 
 	public FireworkEffectMatcher effect;

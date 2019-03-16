@@ -6,6 +6,8 @@ import org.bukkit.inventory.meta.LeatherArmorMeta;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.ItemMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.color.ColorMatcher;
 
+import java.util.Optional;
+
 /**
  * @author Ameliorate
  */
@@ -14,11 +16,8 @@ public class ItemLeatherArmorColorMatcher implements ItemMatcher {
 		this.color = color;
 	}
 
-	public static ItemLeatherArmorColorMatcher construct(ColorMatcher color) {
-		if (color == null)
-			return null;
-
-		return new ItemLeatherArmorColorMatcher(color);
+	public static ItemLeatherArmorColorMatcher construct(Optional<ColorMatcher> color) {
+		return color.map(ItemLeatherArmorColorMatcher::new).orElse(null);
 	}
 
 	public ColorMatcher color;

@@ -4,6 +4,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.ItemMatcher;
 
+import java.util.Optional;
+
 /**
  * @author Ameliorate
  */
@@ -12,11 +14,8 @@ public class ItemDurabilityMatcher implements ItemMatcher {
 		this.matcher = matcher;
 	}
 
-	public static ItemDurabilityMatcher construct(AmountMatcher matcher) {
-		if (matcher == null)
-			return null;
-
-		return new ItemDurabilityMatcher(matcher);
+	public static ItemDurabilityMatcher construct(Optional<AmountMatcher> matcher) {
+		return matcher.map(ItemDurabilityMatcher::new).orElse(null);
 	}
 
 	public AmountMatcher matcher;

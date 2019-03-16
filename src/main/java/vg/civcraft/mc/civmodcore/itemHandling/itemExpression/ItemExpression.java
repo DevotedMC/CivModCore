@@ -1,9 +1,6 @@
 package vg.civcraft.mc.civmodcore.itemHandling.itemExpression;
 
-import org.bukkit.Color;
-import org.bukkit.DyeColor;
-import org.bukkit.FireworkEffect;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.configuration.ConfigurationSection;
@@ -22,10 +19,7 @@ import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.color.ColorMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.color.ExactlyColor;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.color.ListColor;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enchantment.*;
-import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enummatcher.EnumFromListMatcher;
-import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enummatcher.EnumIndexMatcher;
-import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enummatcher.EnumMatcher;
-import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enummatcher.NameEnumMatcher;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enummatcher.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.firework.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.map.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc.ItemExactlyInventoryMatcher;
@@ -152,8 +146,8 @@ public class ItemExpression {
 		addMatcher(parseExactly(config, "exactly"));
 
 		// knowlege book (creative item that holds recipe unlocks)
-		addMatcher(parseKnowlegeBook(config, "knowlegebook.recipesAny", false));
-		addMatcher(parseKnowlegeBook(config, "knowlegebook.recipesAll", true));
+		addMatcher(ItemKnowledgeBookMatcher.construct(parseName(config, "knowlegebook.recipesAny"), false));
+		addMatcher(ItemKnowledgeBookMatcher.construct(parseName(config, "knowlegebook.recipesAll"), true));
 
 		// potion
 		addMatcher(parsePotion(config, "potion"));
@@ -184,14 +178,14 @@ public class ItemExpression {
 	 * Gets a ItemExpression from the given path in the config
 	 * @param configurationSection The config to get the ItemExpression from
 	 * @param path The path to the ItemExpression
-	 * @return The ItemExpression in the config that path points to, or null if there was not an ItemExpression at path.
+	 * @return The ItemExpression in the config that path points to, or empty if there was not an ItemExpression at path.
 	 */
-	public static ItemExpression getItemExpression(ConfigurationSection configurationSection, String path) {
+	public static Optional<ItemExpression> getItemExpression(ConfigurationSection configurationSection, String path) {
 		if (configurationSection == null)
-			return null;
+			return Optional.empty();
 		if (!configurationSection.contains(path))
-			return null;
-		return new ItemExpression(configurationSection.getConfigurationSection(path));
+			return Optional.empty();
+		return Optional.of(new ItemExpression(configurationSection.getConfigurationSection(path)));
 	}
 
 	public static List<ItemExpression> getItemExpressionList(ConfigurationSection config, String path) {
@@ -229,66 +223,67 @@ public class ItemExpression {
 		return list;
 	}
 
-	private MaterialMatcher parseMaterial(ConfigurationSection config, String path) {
+	private Optional<MaterialMatcher> parseMaterial(ConfigurationSection config, String path) {
 		if (config.contains(path + ".regex"))
-			return(new RegexMaterial(Pattern.compile(config.getString(path + ".regex"))));
+			return Optional.of(new RegexMaterial(Pattern.compile(config.getString(path + ".regex"))));
 		else if (config.contains(path))
-			return(new ExactlyMaterial(Material.getMaterial(config.getString(path))));
-		return null;
+			return Optional.of(new ExactlyMaterial(Material.getMaterial(config.getString(path))));
+		return Optional.empty();
 	}
 
-	private AmountMatcher parseAmount(ConfigurationSection config, String path) {
+	private Optional<AmountMatcher> parseAmount(ConfigurationSection config, String path) {
 		if (config.contains(path + ".range"))
-			return(new RangeAmount(
+			return Optional.of((new RangeAmount(
 					config.getDouble(path + ".range.low", 0),
 					config.getDouble(path + ".range.high"),
 					config.getBoolean(path + ".range.inclusiveLow", true),
-					config.getBoolean(path + ".range.inclusiveHigh", true)));
+					config.getBoolean(path + ".range.inclusiveHigh", true))));
 		else if ("any".equals(config.getString(path)))
-			return(new AnyAmount());
+			return Optional.of(new AnyAmount());
 		else if (config.contains(path))
-			return(new ExactlyAmount(config.getDouble(path)));
-		return null;
+			return Optional.of(new ExactlyAmount(config.getDouble(path)));
+		return Optional.empty();
 	}
 
-	private LoreMatcher parseLore(ConfigurationSection config, String path) {
+	private Optional<LoreMatcher> parseLore(ConfigurationSection config, String path) {
 		if (config.contains(path + ".regex")) {
 			String patternStr = config.getString(path + ".regex");
 			boolean multiline = config.getBoolean(path + ".regexMultiline", true);
 			Pattern pattern = Pattern.compile(patternStr, multiline ? Pattern.MULTILINE : 0);
 
-			return(new RegexLore(pattern));
+			return Optional.of(new RegexLore(pattern));
 		} else if (config.contains(path))
-			return(new ExactlyLore(config.getStringList(path)));
-		return null;
+			return Optional.of(new ExactlyLore(config.getStringList(path)));
+		return Optional.empty();
 	}
 
-	private NameMatcher parseName(ConfigurationSection config, String path, boolean caseSensitive) {
+	private Optional<NameMatcher> parseName(ConfigurationSection config, String path, boolean caseSensitive) {
 		if (config.contains(path + ".regex"))
-			return(new RegexName(Pattern.compile(config.getString(path + ".regex"),
+			return Optional.of(new RegexName(Pattern.compile(config.getString(path + ".regex"),
 					caseSensitive ? 0 : Pattern.CASE_INSENSITIVE)));
 		else if ("vanilla".equals(config.getString(path)))
-			return(new VanillaName());
+			return Optional.of(new VanillaName());
 		else if (config.contains(path))
-			return(new ExactlyName(config.getString(path), caseSensitive));
-		return null;
+			return Optional.of(new ExactlyName(config.getString(path), caseSensitive));
+		return Optional.empty();
 	}
 
-	private NameMatcher parseName(ConfigurationSection config, String path) {
+	private Optional<NameMatcher> parseName(ConfigurationSection config, String path) {
 		return parseName(config, path, true);
 	}
 
-	private ItemEnchantmentsMatcher parseEnchantment(ConfigurationSection config, String path,
+	private Optional<ItemEnchantmentsMatcher> parseEnchantment(ConfigurationSection config, String path,
 													 ListMatchingMode mode,
 													 EnchantmentsSource source) {
 		ConfigurationSection enchantments = config.getConfigurationSection(path);
 		if (enchantments == null)
-			return null;
+			return Optional.empty();
 
 		ArrayList<EnchantmentMatcher> enchantmentMatcher = new ArrayList<>();
 		for (String enchantName : enchantments.getKeys(false)) {
 			EnchantmentMatcher matcher;
-			AmountMatcher amountMatcher = parseAmount(config, path + "." + enchantName);
+			AmountMatcher amountMatcher = parseAmount(config, path + "." + enchantName)
+					.orElseThrow(AssertionError::new);
 			if (enchantName.equals("any")) {
 				matcher = new AnyEnchantment(amountMatcher);
 			} else {
@@ -298,15 +293,16 @@ public class ItemExpression {
 			enchantmentMatcher.add(matcher);
 		}
 
-		return new ItemEnchantmentsMatcher(enchantmentMatcher, mode, source);
+		return Optional.of(new ItemEnchantmentsMatcher(enchantmentMatcher, mode, source));
 	}
 
-	private ItemEnchantmentCountMatcher parseEnchangmentCount(ConfigurationSection config, String path,
+	private Optional<ItemEnchantmentCountMatcher> parseEnchangmentCount(ConfigurationSection config, String path,
 															  EnchantmentsSource source) {
 		if (!config.contains(path))
-			return null;
+			return Optional.empty();
 
-		return new ItemEnchantmentCountMatcher(parseAmount(config, path), source);
+		return Optional.of(new ItemEnchantmentCountMatcher(parseAmount(config, path)
+				.orElseThrow(ItemExpressionConfigParsingError::new), source));
 	}
 
 	private List<UUIDMatcher> parseSkull(ConfigurationSection config, String path) {
@@ -351,19 +347,19 @@ public class ItemExpression {
 		return matchers;
 	}
 
-	private ItemUnbreakableMatcher parseUnbreakable(ConfigurationSection config, String path) {
+	private Optional<ItemUnbreakableMatcher> parseUnbreakable(ConfigurationSection config, String path) {
 		if (!config.contains(path))
-			return null;
+			return Optional.empty();
 		boolean unbreakable = config.getBoolean(path);
-		return new ItemUnbreakableMatcher(unbreakable);
+		return Optional.of(new ItemUnbreakableMatcher(unbreakable));
 	}
 
-	private ItemExactlyInventoryMatcher parseInventory(ConfigurationSection config, String path) {
+	private Optional<ItemExactlyInventoryMatcher> parseInventory(ConfigurationSection config, String path) {
 		List<ItemExpression> itemExpressions = getItemExpressionList(config, path);
 		if (itemExpressions.isEmpty())
-			return null;
+			return Optional.empty();
 
-		return new ItemExactlyInventoryMatcher(itemExpressions);
+		return Optional.of(new ItemExactlyInventoryMatcher(itemExpressions));
 	}
 
 	private List<ItemMatcher> parseBook(ConfigurationSection config, String path) {
@@ -375,15 +371,19 @@ public class ItemExpression {
 
 		// author
 		if (book.contains("author")) {
-			matchers.add(new ItemBookAuthorMatcher(parseName(book, "author")));
+			matchers.add(new ItemBookAuthorMatcher(parseName(book, "author")
+					.orElseThrow(ItemExpressionConfigParsingError::new)));
 		}
 
 		// generation
-		matchers.add(new ItemBookGenerationMatcher(parseEnumMatcher(config, "generation", BookMeta.Generation.class)));
+		matchers.add(new ItemBookGenerationMatcher(
+				parseEnumMatcher(config, "generation", BookMeta.Generation.class)
+						.orElseThrow(ItemExpressionConfigParsingError::new)));
 
 		// title
 		if (book.contains("title")) {
-			matchers.add(new ItemBookTitleMatcher(parseName(book, "title")));
+			matchers.add(new ItemBookTitleMatcher(parseName(book, "title")
+					.orElseThrow(ItemExpressionConfigParsingError::new)));
 		}
 
 		// pages
@@ -399,26 +399,20 @@ public class ItemExpression {
 
 		// page count
 		if (book.contains("pageCount")) {
-			matchers.add(new ItemBookPageCountMatcher(parseAmount(book, "pageCount")));
+			matchers.add(new ItemBookPageCountMatcher(parseAmount(book, "pageCount")
+					.orElseThrow(ItemExpressionConfigParsingError::new)));
 		}
 
 		return matchers;
 	}
 
-	private ItemExactlyStackMatcher parseExactly(ConfigurationSection config, String path) {
+	private Optional<ItemExactlyStackMatcher> parseExactly(ConfigurationSection config, String path) {
 		if (!config.contains(path))
-			return null;
+			return Optional.empty();
 
 		boolean acceptBoolean = config.getBoolean(path + ".acceptSimilar");
 
-		return new ItemExactlyStackMatcher(config.getItemStack(path), acceptBoolean);
-	}
-
-	private ItemKnowledgeBookMatcher parseKnowlegeBook(ConfigurationSection config, String path, boolean requireAll) {
-		if (!config.contains(path))
-			return null;
-
-		return new ItemKnowledgeBookMatcher(parseName(config, path), requireAll);
+		return Optional.of(new ItemExactlyStackMatcher(config.getItemStack(path), acceptBoolean));
 	}
 
 	private List<ItemMatcher> parsePotion(ConfigurationSection config, String path) {
@@ -429,9 +423,9 @@ public class ItemExpression {
 
 		ConfigurationSection potion = config.getConfigurationSection(path);
 
-		matchers.add(parsePotionEffects(potion,  "customEffectsAny", ANY));
-		matchers.add(parsePotionEffects(potion, "customEffectsAll", ALL));
-		matchers.add(parsePotionEffects(potion, "customEffectsNone", NONE));
+		matchers.add(parsePotionEffects(potion,  "customEffectsAny", ANY).orElse(null));
+		matchers.add(parsePotionEffects(potion, "customEffectsAll", ALL).orElse(null));
+		matchers.add(parsePotionEffects(potion, "customEffectsNone", NONE).orElse(null));
 
 		if (potion.isConfigurationSection("base")) {
 			ConfigurationSection base = potion.getConfigurationSection("base");
@@ -441,7 +435,8 @@ public class ItemExpression {
 			EnumMatcher<PotionType> type;
 
 			if (base.contains("type")) {
-				type = parseEnumMatcher(base, "type", PotionType.class);
+				type = parseEnumMatcher(base, "type", PotionType.class)
+						.orElseThrow(ItemExpressionConfigParsingError::new);
 			} else {
 				type = new EnumFromListMatcher<>(Arrays.asList(PotionType.values()));
 			}
@@ -453,16 +448,16 @@ public class ItemExpression {
 		return matchers;
 	}
 
-	private ItemPotionEffectsMatcher parsePotionEffects(ConfigurationSection config, String path, ListMatchingMode mode) {
+	private Optional<ItemPotionEffectsMatcher> parsePotionEffects(ConfigurationSection config, String path, ListMatchingMode mode) {
 		if (!config.isList(path))
-			return null;
+			return Optional.empty();
 
 		ArrayList<PotionEffectMatcher> matchers = new ArrayList<>();
 
 		for (ConfigurationSection effect : getConfigList(config, path)) {
 			String type = effect.getString("type");
-			AmountMatcher level = parseAmount(effect, "level");
-			AmountMatcher duration = parseAmount(effect, "durationTicks");
+			AmountMatcher level = parseAmount(effect, "level").orElse(new AnyAmount());
+			AmountMatcher duration = parseAmount(effect, "durationTicks").orElse(new AnyAmount());
 
 			PotionEffectMatcher matcher = type.equals("any") ?
 					new AnyPotionEffect(level, duration) :
@@ -471,7 +466,7 @@ public class ItemExpression {
 			matchers.add(matcher);
 		}
 
-		return new ItemPotionEffectsMatcher(matchers, mode);
+		return Optional.of(new ItemPotionEffectsMatcher(matchers, mode));
 	}
 
 	private List<ItemAttributeMatcher> parseAllAttributes(ConfigurationSection config, String path) {
@@ -481,30 +476,35 @@ public class ItemExpression {
 			for (EquipmentSlot slot : EquipmentSlot.values()) {
 				String modeString = mode.getLowerCamelCase();
 
-				matchers.add(parseAttributes(config, path + "." + slot + "." + modeString, slot, mode));
+				matchers.add(parseAttributes(config, path + "." + slot + "." + modeString, slot, mode)
+						.orElse(null));
 			}
 		}
 
 		for (ListMatchingMode mode : ListMatchingMode.values()) {
-			matchers.add(parseAttributes(config, path + ".any." + mode.getLowerCamelCase(), null, mode));
+			matchers.add(parseAttributes(config, path + ".any." + mode.getLowerCamelCase(), null, mode)
+					.orElse(null));
 		}
 
 		return matchers;
 	}
 
-	private ItemAttributeMatcher parseAttributes(ConfigurationSection config, String path, EquipmentSlot slot,
+	private Optional<ItemAttributeMatcher> parseAttributes(ConfigurationSection config, String path, EquipmentSlot slot,
 												 ListMatchingMode mode) {
 		if (!(config.isList(path)))
-			return null;
+			return Optional.empty();
 
 		List<ItemAttributeMatcher.AttributeMatcher> attributeMatchers = new ArrayList<>();
 
 		for (ConfigurationSection attribute : getConfigList(config, path)) {
-			EnumMatcher<Attribute> attributeM = parseEnumMatcher(attribute, "attribute", Attribute.class);
-			EnumMatcher<AttributeModifier.Operation> operation = parseEnumMatcher(attribute, "operation", AttributeModifier.Operation.class);
-			NameMatcher name = parseName(attribute, "name");
-			UUIDMatcher uuid = new ExactlyUUID(UUID.fromString(attribute.getString("uuid")));
-			AmountMatcher amount = parseAmount(attribute, "amount");
+			EnumMatcher<Attribute> attributeM = parseEnumMatcher(attribute, "attribute", Attribute.class)
+					.orElse(new AnyEnum<>());
+			EnumMatcher<AttributeModifier.Operation> operation = parseEnumMatcher(attribute, "operation", AttributeModifier.Operation.class)
+					.orElse(new AnyEnum<>());
+			NameMatcher name = parseName(attribute, "name").orElse(new AnyName());
+			UUIDMatcher uuid = attribute.isString("uuid") ?
+					new ExactlyUUID(UUID.fromString(attribute.getString("uuid"))) : new AnyUUID();
+			AmountMatcher amount = parseAmount(attribute, "amount").orElse(new AnyAmount());
 
 			ItemAttributeMatcher.AttributeMatcher attributeMatcher =
 					new ItemAttributeMatcher.AttributeMatcher(attributeM, name, operation, uuid, amount);
@@ -512,7 +512,7 @@ public class ItemExpression {
 			attributeMatchers.add(attributeMatcher);
 		}
 
-		return new ItemAttributeMatcher(attributeMatchers, slot, mode);
+		return Optional.of(new ItemAttributeMatcher(attributeMatchers, slot, mode));
 	}
 
 	private List<ItemMatcher> parseTropicFishBucket(ConfigurationSection config, String path) {
@@ -523,17 +523,17 @@ public class ItemExpression {
 
 		ConfigurationSection bucket = config.getConfigurationSection(path);
 
-		matchers.add(new ItemTropicFishBBodyColorMatcher(parseEnumMatcher(bucket, "bodyColor", DyeColor.class)));
-		matchers.add(new ItemTropicFishBPatternColorMatcher(parseEnumMatcher(bucket, "patternColor", DyeColor.class)));
-		matchers.add(new ItemTropicFishBPatternMatcher(parseEnumMatcher(bucket, "pattern", TropicalFish.Pattern.class)));
+		matchers.add(ItemTropicFishBBodyColorMatcher.construct(parseEnumMatcher(bucket, "bodyColor", DyeColor.class)));
+		matchers.add(ItemTropicFishBPatternColorMatcher.construct(parseEnumMatcher(bucket, "patternColor", DyeColor.class)));
+		matchers.add(ItemTropicFishBPatternMatcher.construct(parseEnumMatcher(bucket, "pattern", TropicalFish.Pattern.class)));
 
 		return matchers;
 	}
 
-	private <E extends Enum<E>> EnumMatcher<E> parseEnumMatcher(ConfigurationSection config, String path,
+	private <E extends Enum<E>> Optional<EnumMatcher<E>> parseEnumMatcher(ConfigurationSection config, String path,
 																Class<E> enumClass) {
 		if (!config.contains(path))
-			return null;
+			return Optional.empty();
 
 		if (config.isList(path)) {
 			List<String> enumStrings = config.getStringList(path);
@@ -548,36 +548,39 @@ public class ItemExpression {
 					.map((name) -> E.valueOf(enumClass, name.toUpperCase()))
 					.collect(Collectors.toList());
 
-			return new EnumFromListMatcher<>(properties, notInList);
+			return Optional.of(new EnumFromListMatcher<>(properties, notInList));
 		} if (config.isInt(path + ".index")) {
-			return new EnumIndexMatcher<>(config.getInt(path + ".index"));
+			return Optional.of(new EnumIndexMatcher<>(config.getInt(path + ".index")));
 		} else {
-			return new NameEnumMatcher<>(parseName(config, path, false));
+			return parseName(config, path, false).map(NameEnumMatcher::new);
 		}
 	}
 
-	private ColorMatcher parseColor(ConfigurationSection config, String path) {
+	private Optional<ColorMatcher> parseColor(ConfigurationSection config, String path) {
 		if (!config.contains(path))
-			return null;
+			return Optional.empty();
 
 		return parseColor(config.get(path));
 	}
 
-	private ColorMatcher parseColor(Object config) {
+	private Optional<ColorMatcher> parseColor(Object config) {
 		if (config == null)
-			return null;
+			return Optional.empty();
 
 		if (config instanceof String) {
 			// vanilla dye name
-			return new ExactlyColor(ExactlyColor.getColorByVanillaName((String) config));
+			return Optional.of(new ExactlyColor(ExactlyColor.getColorByVanillaName((String) config)));
 
 		} else if (config instanceof Integer) {
 			// rgb color
-			return new ExactlyColor(Color.fromRGB((Integer) config));
+			return Optional.of(new ExactlyColor(Color.fromRGB((Integer) config)));
 
 		} else if (config instanceof List) {
 			// any of matchers in list
-			return parseListColor((List<?>) config);
+			return parseListColor((List<?>) config).map(lc -> lc); // identity map to fix type inferency errors
+			// By default, java can't cast Option<ListColor> to Option<ColorMatcher>.
+			// However, it can cast ListColor to ColorMatcher, of course. By having an identity map, we give java the
+			//  chance to make that type inference.
 
 		} else if (config instanceof Map) {
 			if (((Map) config).containsKey("rgb")) {
@@ -586,45 +589,46 @@ public class ItemExpression {
 
 				if (rgb instanceof Integer) {
 					// rgb int
-					return new ExactlyColor(Color.fromRGB((Integer) rgb));
+					return Optional.of(new ExactlyColor(Color.fromRGB((Integer) rgb)));
 				} else if (rgb instanceof List) {
 					// [r, g, b]
 					int red = (int) ((List) rgb).get(0);
 					int green = (int) ((List) rgb).get(1);
 					int blue = (int) ((List) rgb).get(2);
-					return new ExactlyColor(Color.fromRGB(red, green, blue));
+					return Optional.of(new ExactlyColor(Color.fromRGB(red, green, blue)));
 				}
 
 			} else if (((Map) config).containsKey("html")) {
 				// html color name
 				String htmlColorName = (String) ((Map) config).get("html");
-				return new ExactlyColor(ExactlyColor.getColorByHTMLName(htmlColorName));
+				return Optional.of(new ExactlyColor(ExactlyColor.getColorByHTMLName(htmlColorName)));
 
 			} else if (((Map) config).containsKey("firework")) {
 				// firework vanilla dye name
 				String fireworkDyeColorName = (String) ((Map) config).get("firework");
-				return new ExactlyColor(ExactlyColor.getColorByVanillaName(fireworkDyeColorName, true));
+				return Optional.of(new ExactlyColor(ExactlyColor.getColorByVanillaName(fireworkDyeColorName, true)));
 
 			} else if (((Map) config).containsKey("anyOf")) {
 				// any of matchers in list
-				return parseListColor((List<?>) ((Map) config).get("anyOf"));
+				return parseListColor((List<?>) ((Map) config).get("anyOf")).map(lc -> lc);
 
 			} else if (((Map) config).containsKey("noneOf")) {
 				// none of matchers in list
-				return parseListColor((List<?>) ((Map) config).get("noneOf"));
+				return parseListColor((List<?>) ((Map) config).get("noneOf")).map(lc -> lc);
 			}
 		}
 
-		return null;
+		return Optional.empty();
 	}
 
-	private ListColor parseListColor(List<?> config) {
+	private Optional<ListColor> parseListColor(List<?> config) {
 		if (config == null)
-			return null;
+			return Optional.empty();
 
-		return new ListColor(((List<?>) config).stream()
+		return Optional.of(new ListColor(((List<?>) config).stream()
 				.map(this::parseColor)
-				.collect(Collectors.toList()), false);
+				.map((option) -> option.orElseThrow(ItemExpressionConfigParsingError::new))
+				.collect(Collectors.toList()), false));
 	}
 
 	private List<ItemMatcher> parseMap(ConfigurationSection config, String path) {
@@ -636,17 +640,18 @@ public class ItemExpression {
 		ConfigurationSection map = config.getConfigurationSection(path);
 
 		if (map.contains("center.x")) {
-			matchers.add(new ItemMapViewMatcher(new CenterMapView(parseAmount(map, "center.x"),
-					CenterMapView.CenterCoordinate.X)));
+			matchers.add(new ItemMapViewMatcher(new CenterMapView(parseAmount(map, "center.x")
+					.orElseThrow(AssertionError::new), CenterMapView.CenterCoordinate.X)));
 		}
 
 		if (map.contains("center.z")) {
-			matchers.add(new ItemMapViewMatcher(new CenterMapView(parseAmount(map, "center.z"),
-					CenterMapView.CenterCoordinate.Z)));
+			matchers.add(new ItemMapViewMatcher(new CenterMapView(parseAmount(map, "center.z")
+					.orElseThrow(AssertionError::new), CenterMapView.CenterCoordinate.Z)));
 		}
 
 		if (map.contains("id")) {
-			matchers.add(new ItemMapViewMatcher(new IDMapView(parseAmount(map, "id"))));
+			matchers.add(new ItemMapViewMatcher(new IDMapView(parseAmount(map, "id")
+					.orElseThrow(AssertionError::new))));
 		}
 
 		if (map.isBoolean("isUnlimitedTracking")) {
@@ -659,15 +664,16 @@ public class ItemExpression {
 
 		if (map.contains("scale")) {
 			matchers.add(new ItemMapViewMatcher(new ScaleMapView(
-					parseEnumMatcher(map, "scale", MapView.Scale.class))));
+					parseEnumMatcher(map, "scale", MapView.Scale.class).orElseThrow(AssertionError::new))));
 		}
 
 		if (map.contains("world")) {
-			matchers.add(new ItemMapViewMatcher(new WorldMapView(parseName(map, "world"))));
+			matchers.add(new ItemMapViewMatcher(new WorldMapView(parseName(map, "world").orElseThrow(AssertionError::new))));
 		}
 
 		if (map.contains("color")) {
-			matchers.add(new ItemMapColorMatcher(parseColor(map, "color")));
+			matchers.add(new ItemMapColorMatcher(parseColor(map, "color")
+					.orElseThrow(ItemExpressionConfigParsingError::new)));
 		}
 
 		if (map.isBoolean("isScaling")) {
@@ -675,7 +681,7 @@ public class ItemExpression {
 		}
 
 		if (map.contains("location")) {
-			matchers.add(new ItemMapLocationMatcher(parseName(map, "location")));
+			matchers.add(new ItemMapLocationMatcher(parseName(map, "location").orElseThrow(AssertionError::new)));
 		}
 
 		return matchers;
@@ -691,48 +697,55 @@ public class ItemExpression {
 		if (spawner.contains("delay.current")) {
 			// Caution: This is the time until the spawner will spawn its next mob. See minDelay and maxDelay for
 			// what might be expected.
-			matchers.add(new ItemMobSpawnerDelayMatcher(parseAmount(spawner, "delay.current")));
+			matchers.add(new ItemMobSpawnerDelayMatcher(parseAmount(spawner, "delay.current")
+					.orElseThrow(AssertionError::new)));
 		}
 
 		if (spawner.contains("maxNearbyEntities")) {
-			matchers.add(new ItemMobSpawnerMaxNearbyEntitiesMatcher(parseAmount(spawner, "maxNearbyEntities")));
+			matchers.add(new ItemMobSpawnerMaxNearbyEntitiesMatcher(parseAmount(spawner, "maxNearbyEntities")
+					.orElseThrow(AssertionError::new)));
 		}
 
 		if (spawner.contains("requiredPlayerRange")) {
-			matchers.add(new ItemMobSpawnerRequiredPlayerRangeMatcher(parseAmount(spawner, "requiredPlayerRange")));
+			matchers.add(new ItemMobSpawnerRequiredPlayerRangeMatcher(parseAmount(spawner, "requiredPlayerRange")
+					.orElseThrow(AssertionError::new)));
 		}
 
 		if (spawner.contains("spawnCount")) {
-			matchers.add(new ItemMobSpawnerSpawnCountMatcher(parseAmount(spawner, "spawnCount")));
+			matchers.add(new ItemMobSpawnerSpawnCountMatcher(parseAmount(spawner, "spawnCount")
+					.orElseThrow(AssertionError::new)));
 		}
 
 		if (spawner.contains("delay.max")) {
-			matchers.add(new ItemMobSpawnerSpawnDelayMatcher(parseAmount(spawner, "delay.max"),
-					ItemMobSpawnerSpawnDelayMatcher.MinMax.MAX));
+			matchers.add(new ItemMobSpawnerSpawnDelayMatcher(parseAmount(spawner, "delay.max")
+					.orElseThrow(AssertionError::new), ItemMobSpawnerSpawnDelayMatcher.MinMax.MAX));
 		}
 
 		if (spawner.contains("delay.min")) {
-			matchers.add(new ItemMobSpawnerSpawnDelayMatcher(parseAmount(spawner, "delay.min"),
-					ItemMobSpawnerSpawnDelayMatcher.MinMax.MIN));
+			matchers.add(new ItemMobSpawnerSpawnDelayMatcher(parseAmount(spawner, "delay.min")
+					.orElseThrow(AssertionError::new), ItemMobSpawnerSpawnDelayMatcher.MinMax.MIN));
 		}
 
 		if (spawner.contains("mob")) {
-			matchers.add(new ItemMobSpawnerSpawnedMobMatcher(parseEnumMatcher(spawner, "mob", EntityType.class)));
+			matchers.add(new ItemMobSpawnerSpawnedMobMatcher(parseEnumMatcher(spawner, "mob", EntityType.class)
+					.orElseThrow(AssertionError::new)));
 		} else if (spawner.contains("entity")) {
 			// duplicate of "mob", for completeness
-			matchers.add(new ItemMobSpawnerSpawnedMobMatcher(parseEnumMatcher(spawner, "entity", EntityType.class)));
+			matchers.add(new ItemMobSpawnerSpawnedMobMatcher(parseEnumMatcher(spawner, "entity", EntityType.class)
+					.orElseThrow(AssertionError::new)));
 		}
 
 		if (spawner.contains("radius")) {
-			matchers.add(new ItemMobSpawnerSpawnRadiusMatcher(parseAmount(spawner, "radius")));
+			matchers.add(new ItemMobSpawnerSpawnRadiusMatcher(parseAmount(spawner, "radius")
+					.orElseThrow(AssertionError::new)));
 		}
 
 		return matchers;
 	}
 
-	private FireworkEffectMatcher parseFireworkEffect(ConfigurationSection config, String path) {
+	private Optional<FireworkEffectMatcher> parseFireworkEffect(ConfigurationSection config, String path) {
 		if (!config.isConfigurationSection(path))
-			return null;
+			return Optional.empty();
 
 		ConfigurationSection fireworkEffect = config.getConfigurationSection(path);
 
@@ -742,24 +755,25 @@ public class ItemExpression {
 
 		if (fireworkEffect.isList("colors")) {
 			for (Object color : fireworkEffect.getList("colors")) {
-				colors.add(parseColor(color));
+				colors.add(parseColor(color).orElseThrow(ItemExpressionConfigParsingError::new));
 			}
 		}
 
-		colors.add(parseColor(fireworkEffect, "color"));
+		parseColor(fireworkEffect, "color").map(colors::add);
 
 		List<ColorMatcher> fadeColors = new ArrayList<>();
 		ListMatchingMode fadeColorsMode = ListMatchingMode.valueOf(fireworkEffect.getString("fadeColorsMode", "ANY").toUpperCase());
 
 		if (fireworkEffect.isList("fadeColors")) {
 			for (Object color : fireworkEffect.getList("fadeColors")) {
-				fadeColors.add(parseColor(color));
+				fadeColors.add(parseColor(color).orElseThrow(ItemExpressionConfigParsingError::new));
 			}
 		}
 
-		fadeColors.add(parseColor(fireworkEffect, "fadeColor"));
+		parseColor(fireworkEffect, "fadeColor").map(fadeColors::add);
 
-		EnumMatcher<FireworkEffect.Type> type = parseEnumMatcher(fireworkEffect, "type", FireworkEffect.Type.class);
+		EnumMatcher<FireworkEffect.Type> type = parseEnumMatcher(fireworkEffect, "type", FireworkEffect.Type.class)
+				.orElse(new AnyEnum<>());
 
 		Optional<Boolean> hasFlicker = Optional.empty();
 		if (fireworkEffect.isBoolean("hasFlicker")) {
@@ -771,12 +785,12 @@ public class ItemExpression {
 			hasTrail = Optional.of(fireworkEffect.getBoolean("hasTrail"));
 		}
 
-		return new ExactlyFireworkEffect(type, colors, colorsMode, fadeColors, fadeColorsMode, hasFlicker, hasTrail);
+		return Optional.of(new ExactlyFireworkEffect(type, colors, colorsMode, fadeColors, fadeColorsMode, hasFlicker, hasTrail));
 	}
 
 	private List<ItemMatcher> parseFirework(ConfigurationSection config, String path) {
 		if (!config.isConfigurationSection(path))
-			return null;
+			return Collections.emptyList();
 
 		ConfigurationSection firework = config.getConfigurationSection(path);
 		ArrayList<ItemMatcher> matchers = new ArrayList<>();
@@ -785,7 +799,8 @@ public class ItemExpression {
 			ArrayList<FireworkEffectMatcher> effectMatchers = new ArrayList<>();
 
 			for (ConfigurationSection effect : getConfigList(firework, "effects" + mode.getUpperCamelCase())) {
-				FireworkEffectMatcher matcher = parseFireworkEffect(effect, "");
+				FireworkEffectMatcher matcher = parseFireworkEffect(effect, "")
+						.orElseThrow(ItemExpressionConfigParsingError::new);
 				effectMatchers.add(matcher);
 			}
 
@@ -793,13 +808,11 @@ public class ItemExpression {
 				matchers.add(new ItemFireworkEffectsMatcher(effectMatchers, mode));
 		}
 
-		AmountMatcher power = parseAmount(firework, "power");
-		if (power != null)
-			matchers.add(new ItemFireworkPowerMatcher(power));
+		Optional<AmountMatcher> power = parseAmount(firework, "power");
+		power.ifPresent(aPower -> matchers.add(new ItemFireworkPowerMatcher(aPower)));
 
-		AmountMatcher effectsCount = parseAmount(firework, "effectsCount");
-		if (effectsCount != null)
-			matchers.add(new ItemFireworkEffectsCountMatcher(effectsCount));
+		Optional<AmountMatcher> effectsCount = parseAmount(firework, "effectsCount");
+		effectsCount.ifPresent(aEffectsCount -> matchers.add(new ItemFireworkEffectsCountMatcher(aEffectsCount)));
 
 		return matchers;
 	}
@@ -1053,6 +1066,18 @@ public class ItemExpression {
 			return;
 
 		matchers.forEach(this::addMatcher);
+	}
+
+	/**
+	 * Adds the matcher if Optional is not none.
+	 * @param matcher The optional that may contain an ItemMatcher.
+	 * @param <T> The type of ItemMatcher being added.
+	 */
+	public <T extends ItemMatcher> void addMatcher(Optional<T> matcher) {
+		if (!matcher.isPresent())
+			return;
+
+		matcher.ifPresent(this::addMatcher);
 	}
 
 	/**

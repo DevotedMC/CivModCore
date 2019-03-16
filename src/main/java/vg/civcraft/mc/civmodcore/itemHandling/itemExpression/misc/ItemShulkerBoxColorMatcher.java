@@ -7,6 +7,8 @@ import org.bukkit.inventory.meta.BlockStateMeta;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.ItemMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enummatcher.EnumMatcher;
 
+import java.util.Optional;
+
 /**
  * @author Ameliorate
  */
@@ -15,11 +17,8 @@ public class ItemShulkerBoxColorMatcher implements ItemMatcher {
 		this.color = color;
 	}
 
-	public static ItemShulkerBoxColorMatcher construct(EnumMatcher<DyeColor> color) {
-		if (color == null)
-			return null;
-
-		return new ItemShulkerBoxColorMatcher(color);
+	public static ItemShulkerBoxColorMatcher construct(Optional<EnumMatcher<DyeColor>> color) {
+		return color.map(ItemShulkerBoxColorMatcher::new).orElse(null);
 	}
 
 	public EnumMatcher<DyeColor> color;

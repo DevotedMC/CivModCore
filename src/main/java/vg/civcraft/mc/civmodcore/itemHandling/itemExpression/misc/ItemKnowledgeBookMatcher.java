@@ -7,6 +7,7 @@ import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.ItemMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.name.NameMatcher;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -21,6 +22,11 @@ public class ItemKnowledgeBookMatcher implements ItemMatcher {
 
 	public ItemKnowledgeBookMatcher(NameMatcher recipeMatcher) {
 		this(recipeMatcher, false);
+	}
+
+	public static ItemKnowledgeBookMatcher construct(Optional<NameMatcher> recipeMatcher, boolean requireAllMatch) {
+		return recipeMatcher.map((aRecipeMatcher) -> new ItemKnowledgeBookMatcher(aRecipeMatcher, requireAllMatch))
+				.orElse(null);
 	}
 
 	public NameMatcher recipeMatcher;

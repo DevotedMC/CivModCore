@@ -3,6 +3,8 @@ package vg.civcraft.mc.civmodcore.itemHandling.itemExpression.name;
 import org.bukkit.inventory.ItemStack;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.ItemMatcher;
 
+import java.util.Optional;
+
 /**
  * @author Ameliorate
  */
@@ -11,11 +13,8 @@ public class ItemNameMatcher implements ItemMatcher {
 		this.matcher = matcher;
 	}
 
-	public static ItemNameMatcher construct(NameMatcher matcher) {
-		if (matcher == null)
-			return null;
-
-		return new ItemNameMatcher(matcher);
+	public static ItemNameMatcher construct(Optional<NameMatcher> matcher) {
+		return matcher.map(ItemNameMatcher::new).orElse(null);
 	}
 
 	public NameMatcher matcher;

@@ -3,6 +3,8 @@ package vg.civcraft.mc.civmodcore.itemHandling.itemExpression.lore;
 import org.bukkit.inventory.ItemStack;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.ItemMatcher;
 
+import java.util.Optional;
+
 /**
  * @author Ameliorate
  */
@@ -11,11 +13,8 @@ public class ItemLoreMatcher implements ItemMatcher {
 		this.matcher = matcher;
 	}
 
-	public static ItemLoreMatcher construct(LoreMatcher matcher) {
-		if (matcher == null)
-			return null;
-
-		return new ItemLoreMatcher(matcher);
+	public static ItemLoreMatcher construct(Optional<LoreMatcher> matcher) {
+		return matcher.map(ItemLoreMatcher::new).orElse(null);
 	}
 
 	public LoreMatcher matcher;
