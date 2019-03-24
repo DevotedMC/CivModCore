@@ -1,13 +1,11 @@
 package vg.civcraft.mc.civmodcore.itemHandling;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
+import java.util.function.Predicate;
 import java.util.logging.Logger;
+
+import com.google.common.collect.Lists;
 import net.minecraft.server.v1_13_R2.NBTTagCompound;
 import net.minecraft.server.v1_13_R2.NBTTagList;
 import org.bukkit.Bukkit;
@@ -18,6 +16,7 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.ItemExpression;
 
 /**
  * Allows the storage and comparison of itemstacks while ignoring their maximum possible stack sizes. This offers
@@ -560,6 +559,48 @@ public class ItemMap {
 			}
 		}
 		return true;
+	}
+
+	/**
+	 * Matches a number of ItemExpression on this ItemMap, trying to match each ItemExpression to a ItemStack 1:1.
+	 *
+	 * This works similar to, but not exactly like ItemMap.getEntries().steam().allMatch().
+	 *
+	 * For example, if this is an ItemMap of a diamond sword and a stack of dirt, passing this function a
+	 * ItemExpression that matches any sword will return true, but passing it a collection of
+	 * ItemExpressions [Matches diamond sword, Matches any sword] will return false, because it can't match each
+	 * ItemExpression to an ItemStack.
+	 * @param itemExpressions The collection of ItemExpression that will match over this ItemMap.
+	 * @return true if all if all of the ItemExpressions matched an item in this ItemMap in a 1:1 fashion, otherwise false.
+	 */
+	public boolean itemExpressionsMatchItems(Collection<ItemExpression> itemExpressions) {
+		// clone so we can remove elements as needed.
+		ArrayList<ItemExpression> itemExpressions1 = new ArrayList<>(itemExpressions);
+		ItemMap clone = clone();
+
+		// The list is reversed so we can remove the current ItemExpression without shifting over the list.
+		for (ItemExpression e : Lists.reverse(itemExpressions1)) {
+			Predicate<Entry<ItemStack, Integer>> iePredicate = e.getMatchesItemMapPredicate(clone);
+			boolean matched = false;
+
+			for (Entry<ItemStack, Integer> entry : clone.getEntrySet()) {
+				if (iePredicate.test(entry)) {
+					// Make sure that each ItemExpression can match one ItemStack,
+					// and that each ItemStack can only be matched by one ItemExpression
+					clone.removeItemStack(entry.getKey());
+					itemExpressions1.remove(e);
+					matched = true;
+					break;
+				}
+			}
+
+			if (!matched) {
+				// slight optimization to return early instead of needing to check every single ItemExpression
+				return false;
+			}
+		}
+
+		return itemExpressions1.isEmpty();
 	}
 
 	@Override
