@@ -23,4 +23,9 @@ public class ExactlyName implements NameMatcher {
 		else
 			return this.name.equals(name.toLowerCase());
 	}
+
+	@Override
+	public String solve(String defaultValue) throws NotSolvableException {
+		return name;
+	}
 }

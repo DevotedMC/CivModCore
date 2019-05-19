@@ -23,4 +23,15 @@ public class PlayerNameUUID implements UUIDMatcher {
 		else
 			return false;
 	}
+
+	@SuppressWarnings("deprecation")
+	@Override
+	public UUID solve(UUID startingValue) throws NotSolvableException {
+		OfflinePlayer player = Bukkit.getOfflinePlayer(name);
+
+		if (player == null)
+			throw new NotSolvableException("can't find player with name " + name);
+
+		return player.getUniqueId();
+	}
 }

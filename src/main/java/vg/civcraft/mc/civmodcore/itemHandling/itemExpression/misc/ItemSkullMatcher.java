@@ -1,5 +1,7 @@
 package vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc;
 
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.ItemMatcher;
@@ -36,5 +38,21 @@ public class ItemSkullMatcher implements ItemMatcher {
         else
         	owner = meta.getOwningPlayer().getUniqueId();
         return ownerMatcher.stream().anyMatch((matcher) -> matcher.matches(owner));
+	}
+
+	@Override
+	public ItemStack solve(ItemStack item) throws NotSolvableException {
+		UUID uuid = ListMatchingMode.ANY.solve(ownerMatcher,
+				() -> new UUID(0, 0))
+				.get(0);
+
+		if (!item.hasItemMeta() || !(item.getItemMeta() instanceof SkullMeta))
+			item.setType(Material.PLAYER_HEAD);
+		assert item.getItemMeta() instanceof SkullMeta;
+
+		SkullMeta meta = (SkullMeta) item.getItemMeta();
+		meta.setOwningPlayer(Bukkit.getOfflinePlayer(uuid));
+		item.setItemMeta(meta);
+		return item;
 	}
 }

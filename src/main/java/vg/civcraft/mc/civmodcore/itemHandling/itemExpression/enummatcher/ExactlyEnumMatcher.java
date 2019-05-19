@@ -14,4 +14,9 @@ public class ExactlyEnumMatcher<E extends Enum<E>> implements EnumMatcher<E> {
 	public boolean matches(E enumm) {
 		return exactly.equals(enumm);
 	}
+
+	@Override
+	public E solve(E defaultValue) throws NotSolvableException {
+		return exactly;
+	}
 }

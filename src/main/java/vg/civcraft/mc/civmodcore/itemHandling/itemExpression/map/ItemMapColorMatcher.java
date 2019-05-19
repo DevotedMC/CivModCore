@@ -1,5 +1,7 @@
 package vg.civcraft.mc.civmodcore.itemHandling.itemExpression.map;
 
+import org.bukkit.DyeColor;
+import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.MapMeta;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.ItemMatcher;
@@ -22,5 +24,18 @@ public class ItemMapColorMatcher implements ItemMatcher {
 			return false;
 
 		return color.matches(((MapMeta) item.getItemMeta()).getColor());
+	}
+
+	@Override
+	public ItemStack solve(ItemStack item) throws NotSolvableException {
+		if (!item.hasItemMeta() || !(item.getItemMeta() instanceof MapMeta))
+			item.setType(Material.MAP);
+
+		MapMeta meta = (MapMeta) item.getItemMeta();
+		meta.setColor(color.solve(DyeColor.WHITE.getColor()));
+
+		item.setItemMeta(meta);
+
+		return item;
 	}
 }

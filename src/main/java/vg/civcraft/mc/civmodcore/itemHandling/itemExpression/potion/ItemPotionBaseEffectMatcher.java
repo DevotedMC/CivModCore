@@ -1,5 +1,6 @@
 package vg.civcraft.mc.civmodcore.itemHandling.itemExpression.potion;
 
+import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionData;
@@ -53,5 +54,23 @@ public class ItemPotionBaseEffectMatcher implements ItemMatcher {
 		}
 
 		return this.type.matches(type);
+	}
+
+	@Override
+	public ItemStack solve(ItemStack item) throws NotSolvableException {
+		if (item.getType() != Material.POTION &&
+				item.getType() != Material.SPLASH_POTION &&
+				item.getType() != Material.LINGERING_POTION)
+			item.setType(Material.POTION);
+
+		PotionMeta potionMeta = (PotionMeta) item.getItemMeta();
+
+		PotionType type = this.type.solve(PotionType.AWKWARD);
+		boolean isExtended = this.isExtended.orElse(false);
+		boolean isUpgraded = this.isUpgraded.orElse(false);
+
+		potionMeta.setBasePotionData(new PotionData(type, isExtended, isUpgraded));
+		item.setItemMeta(potionMeta);
+        return item;
 	}
 }

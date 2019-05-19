@@ -16,4 +16,9 @@ public class ExactlyAmount implements AmountMatcher {
 	public boolean matches(Double amount) {
 		return this.amount == amount;
 	}
+
+	@Override
+	public Double solve(Double defaultValue) throws NotSolvableException {
+		return amount;
+	}
 }

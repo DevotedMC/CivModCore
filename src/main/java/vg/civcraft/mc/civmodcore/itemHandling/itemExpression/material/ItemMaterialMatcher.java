@@ -23,4 +23,10 @@ public class ItemMaterialMatcher implements ItemMatcher {
 	public boolean matches(ItemStack item) {
         return matcher.matches(item.getType());
 	}
+
+	@Override
+	public ItemStack solve(ItemStack item) throws NotSolvableException {
+		item.setType(matcher.solve(item.getType()));
+		return item;
+	}
 }

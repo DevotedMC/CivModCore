@@ -25,4 +25,9 @@ public class PlayerNameRegexUUID implements UUIDMatcher {
 		} else
 			return false;
 	}
+
+	@Override
+	public UUID solve(UUID startingValue) throws NotSolvableException {
+		throw new NotSolvableException("can't solve a regex");
+	}
 }

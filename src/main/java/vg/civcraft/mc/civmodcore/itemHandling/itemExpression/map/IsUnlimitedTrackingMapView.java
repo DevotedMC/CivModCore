@@ -16,4 +16,11 @@ public class IsUnlimitedTrackingMapView implements MapViewMatcher {
 	public boolean matches(MapView map) {
         return map.isUnlimitedTracking() == isUmlimitedTracking;
 	}
+
+	@Override
+	public MapView solve(MapView map) throws NotSolvableException {
+		map.setUnlimitedTracking(isUmlimitedTracking);
+
+		return map;
+	}
 }

@@ -1,6 +1,8 @@
 package vg.civcraft.mc.civmodcore.itemHandling.itemExpression.lore;
 
+import org.bukkit.Bukkit;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.ItemMatcher;
 
 import java.util.Optional;
@@ -25,5 +27,14 @@ public class ItemLoreMatcher implements ItemMatcher {
             return false;
 
 		return matcher.matches(item.getItemMeta().getLore());
+	}
+
+	@Override
+	public ItemStack solve(ItemStack item) throws NotSolvableException {
+		ItemMeta meta = item.hasItemMeta() ? item.getItemMeta() : Bukkit.getItemFactory().getItemMeta(item.getType());
+
+		meta.setLore(matcher.solve(meta.getLore()));
+		item.setItemMeta(meta);
+		return item;
 	}
 }

@@ -17,4 +17,11 @@ public class ScaleMapView implements MapViewMatcher {
 	public boolean matches(MapView map) {
 		return scale.matches(map.getScale());
 	}
+
+	@Override
+	public MapView solve(MapView view) throws NotSolvableException {
+		view.setScale(scale.solve(MapView.Scale.NORMAL));
+
+		return view;
+	}
 }

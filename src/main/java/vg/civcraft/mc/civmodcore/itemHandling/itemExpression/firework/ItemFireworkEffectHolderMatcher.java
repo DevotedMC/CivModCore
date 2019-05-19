@@ -1,5 +1,6 @@
 package vg.civcraft.mc.civmodcore.itemHandling.itemExpression.firework;
 
+import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.FireworkEffectMeta;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.ItemMatcher;
@@ -27,5 +28,16 @@ public class ItemFireworkEffectHolderMatcher implements ItemMatcher {
 			return false;
 
 		return effect.matches(((FireworkEffectMeta) item.getItemMeta()).getEffect());
+	}
+
+	@Override
+	public ItemStack solve(ItemStack item) throws NotSolvableException {
+		if (!item.hasItemMeta() || !(item.getItemMeta() instanceof FireworkEffectMeta))
+			item.setType(Material.FIREWORK_STAR);
+
+		FireworkEffectMeta meta = (FireworkEffectMeta) item.getItemMeta();
+		meta.setEffect(effect.solve(meta.getEffect()));
+		item.setItemMeta(meta);
+		return item;
 	}
 }

@@ -25,4 +25,9 @@ public class RegexBookPages implements BookPageMatcher {
 		String formattedPages = pageBuilder.toString();
 		return regex.matcher(formattedPages).find();
 	}
+
+	@Override
+	public List<String> solve(List<String> defaultValue) throws NotSolvableException {
+		throw new NotSolvableException("can't solve regexes");
+	}
 }

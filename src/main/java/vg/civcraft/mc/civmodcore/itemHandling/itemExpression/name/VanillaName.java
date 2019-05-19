@@ -12,4 +12,9 @@ public class VanillaName implements NameMatcher {
 	public boolean matches(String name) {
 		return name.isEmpty();
 	}
+
+	@Override
+	public String solve(String defaultValue) throws NotSolvableException {
+		return "";
+	}
 }

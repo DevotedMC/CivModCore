@@ -22,6 +22,20 @@ public class CenterMapView implements MapViewMatcher {
 		return mapLocation.matches(coordinate);
 	}
 
+	@Override
+	public MapView solve(MapView view) throws NotSolvableException {
+		switch (centerCoordinate) {
+			case X:
+				view.setCenterX(mapLocation.solve(0));
+				break;
+			case Z:
+				view.setCenterZ(mapLocation.solve(0));
+				break;
+		}
+
+		return view;
+	}
+
 	public enum CenterCoordinate {
 		X,
 		Z,

@@ -16,4 +16,9 @@ public class ExactlyBookPages implements BookPageMatcher {
 	public boolean matches(List<String> pages) {
 		return this.pages.equals(pages);
 	}
+
+	@Override
+	public List<String> solve(List<String> defaultValue) throws NotSolvableException {
+		return pages;
+	}
 }

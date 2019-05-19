@@ -17,4 +17,9 @@ public class RegexLore implements LoreMatcher {
 	public boolean matches(List<String> lore) {
 		return pattern.matcher(String.join("\n", lore)).find();
 	}
+
+	@Override
+	public List<String> solve(List<String> defaultValue) throws NotSolvableException {
+		throw new NotSolvableException("can't solve a regex");
+	}
 }

@@ -24,4 +24,11 @@ public class ExactlyPotionEffect implements PotionEffectMatcher {
 				level.matches(effect.getAmplifier()) &&
 				duration.matches(effect.getDuration());
 	}
+
+	@Override
+	public PotionEffect solve(PotionEffect defaultValue) throws NotSolvableException {
+		return new PotionEffect(type,
+				(int) (double) level.solve(0.0),
+				(int) (double) duration.solve(0.0));
+	}
 }

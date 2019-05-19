@@ -1,5 +1,6 @@
 package vg.civcraft.mc.civmodcore.itemHandling.itemExpression.tropicalbucket;
 
+import org.bukkit.Material;
 import org.bukkit.entity.TropicalFish;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.TropicalFishBucketMeta;
@@ -29,5 +30,17 @@ public class ItemTropicFishBPatternMatcher implements ItemMatcher {
 			return false;
 
 		return pattern.matches(((TropicalFishBucketMeta) item.getItemMeta()).getPattern());
+	}
+
+	@Override
+	public ItemStack solve(ItemStack item) throws NotSolvableException {
+		if (!item.hasItemMeta() || !(item.getItemMeta() instanceof TropicalFishBucketMeta))
+			item.setType(Material.TROPICAL_FISH_BUCKET);
+
+		TropicalFishBucketMeta meta = (TropicalFishBucketMeta) item.getItemMeta();
+
+		meta.setPattern(pattern.solve(meta.getPattern()));
+		item.setItemMeta(meta);
+		return item;
 	}
 }

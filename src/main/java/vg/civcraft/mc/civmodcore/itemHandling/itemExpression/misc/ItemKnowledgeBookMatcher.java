@@ -1,5 +1,6 @@
 package vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc;
 
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.KnowledgeBookMeta;
@@ -47,5 +48,29 @@ public class ItemKnowledgeBookMatcher implements ItemMatcher {
 			return recipesStream.allMatch(recipeMatcher::matches);
 		else
 			return recipesStream.anyMatch(recipeMatcher::matches);
+	}
+
+	@SuppressWarnings("deprecation")
+	@Override
+	public ItemStack solve(ItemStack item) throws NotSolvableException {
+		if (!item.hasItemMeta() || !(item.getItemMeta() instanceof KnowledgeBookMeta))
+			item.setType(Material.KNOWLEDGE_BOOK);
+
+		KnowledgeBookMeta meta = (KnowledgeBookMeta) item.getItemMeta();
+
+		List<NamespacedKey> recipes = meta.getRecipes();
+		if (requireAllMatch)
+			recipes.clear();
+
+		String defaultValue = recipes.isEmpty() ? "" : recipes.get(0).toString();
+		String[] solved = recipeMatcher.solve(defaultValue).split(":", 2);
+		String namespace = solved[0];
+		String str = solved[1];
+
+		recipes.add(new NamespacedKey(namespace, str));
+
+		meta.setRecipes(recipes);
+		item.setItemMeta(meta);
+		return item;
 	}
 }

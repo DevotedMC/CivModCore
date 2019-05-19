@@ -19,4 +19,9 @@ public class ExactlyLore implements LoreMatcher {
 	public boolean matches(List<String> lore) {
 		return this.lore.equals(lore);
 	}
+
+	@Override
+	public List<String> solve(List<String> defaultValue) throws NotSolvableException {
+		return lore;
+	}
 }

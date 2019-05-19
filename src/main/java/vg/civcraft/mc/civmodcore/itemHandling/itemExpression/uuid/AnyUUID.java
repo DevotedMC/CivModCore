@@ -10,4 +10,9 @@ public class AnyUUID implements UUIDMatcher {
 	public boolean matches(UUID matched) {
 		return true;
 	}
+
+	@Override
+	public UUID solve(UUID defaultValue) throws NotSolvableException {
+		return defaultValue;
+	}
 }

@@ -27,6 +27,12 @@ public class ItemAmountMatcher implements ItemMatcher, ItemMapMatcher {
 	}
 
 	@Override
+	public ItemStack solve(ItemStack item) throws NotSolvableException {
+		item.setAmount(matcher.solve(1));
+		return item;
+	}
+
+	@Override
 	public boolean matches(ItemMap itemMap, ItemStack item) {
 		return matcher.matches(itemMap.getAmount(item));
 	}

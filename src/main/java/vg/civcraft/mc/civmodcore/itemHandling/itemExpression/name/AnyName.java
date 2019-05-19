@@ -8,4 +8,9 @@ public class AnyName implements NameMatcher {
 	public boolean matches(String matched) {
 		return true;
 	}
+
+	@Override
+	public String solve(String defaultValue) throws NotSolvableException {
+		return defaultValue;
+	}
 }

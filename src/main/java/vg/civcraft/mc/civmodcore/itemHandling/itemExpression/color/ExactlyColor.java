@@ -19,6 +19,11 @@ public class ExactlyColor implements ColorMatcher {
 		return this.color.equals(color);
 	}
 
+	@Override
+	public Color solve(Color defaultValue) throws NotSolvableException {
+		return color;
+	}
+
 	/**
 	 * Maps between HTML colors and org.bukkit.Color. See https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Color.html
 	 * for the full list of colors.

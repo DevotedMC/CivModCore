@@ -16,4 +16,9 @@ public class RegexName implements NameMatcher {
 	public boolean matches(String name) {
 		return regex.matcher(name).matches();
 	}
+
+	@Override
+	public String solve(String defaultValue) throws NotSolvableException {
+		throw new NotSolvableException("can't solve a regex");
+	}
 }

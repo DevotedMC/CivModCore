@@ -1,6 +1,8 @@
 package vg.civcraft.mc.civmodcore.itemHandling.itemExpression.name;
 
+import org.bukkit.Bukkit;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.ItemMatcher;
 
 import java.util.Optional;
@@ -27,5 +29,18 @@ public class ItemNameMatcher implements ItemMatcher {
 		else
 			name = item.getItemMeta().getDisplayName();
 		return matcher.matches(name);
+	}
+
+	@Override
+	public ItemStack solve(ItemStack item) throws NotSolvableException {
+		ItemMeta meta;
+		if (!item.hasItemMeta())
+			meta = Bukkit.getItemFactory().getItemMeta(item.getType());
+		else
+			meta = item.getItemMeta();
+
+		meta.setDisplayName(matcher.solve(meta.getDisplayName()));
+		item.setItemMeta(meta);
+		return item;
 	}
 }

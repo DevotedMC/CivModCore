@@ -1,7 +1,9 @@
 package vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount;
 
+import org.bukkit.Bukkit;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
+import org.bukkit.inventory.meta.ItemMeta;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.ItemMatcher;
 
 import java.util.Optional;
@@ -26,5 +28,18 @@ public class ItemDurabilityMatcher implements ItemMatcher {
             return false;
 
 		return matcher.matches(((Damageable) item.getItemMeta()).getDamage());
+	}
+
+	@Override
+	public ItemStack solve(ItemStack item) throws NotSolvableException {
+		ItemMeta meta = item.hasItemMeta() ? item.getItemMeta() : Bukkit.getItemFactory().getItemMeta(item.getType());
+
+		if (!(item instanceof Damageable))
+			throw new NotSolvableException("item does not have durability");
+
+		((Damageable) meta).setDamage(matcher.solve(1));
+		item.setItemMeta(meta);
+
+		return item;
 	}
 }

@@ -23,4 +23,9 @@ public class ItemExactlyStackMatcher implements ItemMatcher {
 		else
 			return itemStack.isSimilar(item);
 	}
+
+	@Override
+	public ItemStack solve(ItemStack defaultValue) throws NotSolvableException {
+		return itemStack.clone();
+	}
 }

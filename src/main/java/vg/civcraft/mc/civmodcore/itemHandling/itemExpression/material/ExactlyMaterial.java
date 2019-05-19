@@ -16,4 +16,9 @@ public class ExactlyMaterial implements MaterialMatcher {
 	public boolean matches(Material material) {
 		return this.material == material;
 	}
+
+	@Override
+	public Material solve(Material defaultValue) throws NotSolvableException {
+		return material;
+	}
 }

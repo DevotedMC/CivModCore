@@ -6,7 +6,9 @@ import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.Matcher;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /**
@@ -114,5 +116,112 @@ public enum ListMatchingMode {
 		}
 
 		throw new AssertionError("not reachable");
+	}
+
+	public <T, M extends Matcher<T>> List<T> solve(Collection<M> matchers, Supplier<T> defaultValue)
+			throws Matcher.NotSolvableException {
+		ArrayList<T> result = new ArrayList<>();
+
+		switch (this) {
+			case ONE_TO_ONE:
+			case ALL:
+				for (M matcher : matchers) {
+					result.add(matcher.solve(defaultValue.get()));
+				}
+
+				break;
+
+			case ANY:
+				List<Matcher.NotSolvableException> causes = new ArrayList<>();
+				boolean hasSolved = false;
+				for (Matcher<T> matcher : matchers) {
+					try {
+						result.add(matcher.solve(defaultValue.get()));
+						hasSolved = true;
+						break;
+					} catch (Matcher.NotSolvableException e) {
+						causes.add(e);
+					}
+				}
+
+				if (!hasSolved) {
+					Matcher.NotSolvableException e = new Matcher.NotSolvableException("while solving for any matching");
+					causes.forEach(e::addSuppressed);
+					throw e;
+				}
+
+				break;
+
+			case NONE:
+				throw new Matcher.NotSolvableException("can't yet do negative solving");
+		}
+
+		return result;
+	}
+
+	// TODO: how to make this class for non-entry:
+	// use object reflection to optain all fields of defaultValue. use reflection to obtain all fields of returnedValue.
+	// use Object.== operator to compare reference equality. Consiter an entry taken if any of the feilds between the
+	// two are equal.
+	public static class LazyFromListEntrySupplier<K, V> implements Supplier<Map.Entry<K, V>> {
+		public LazyFromListEntrySupplier(Supplier<Collection<Map.Entry<K, V>>> entriesSupplier) {
+			this.entriesSupplier = entriesSupplier;
+		}
+
+		public LazyFromListEntrySupplier(Collection<Map.Entry<K, V>> collection) {
+			this(() -> new ArrayList<>(collection));
+		}
+
+		public LazyFromListEntrySupplier(Map<K, V> map) {
+			this(map.entrySet());
+		}
+
+		private void regen() {
+			if (entries == null || entries.isEmpty())
+				entries = entriesSupplier.get();
+		}
+
+		public Collection<Map.Entry<K, V>> entries;
+		public Supplier<Collection<Map.Entry<K, V>>> entriesSupplier;
+
+		@Override
+		public Map.Entry<K, V> get() {
+			return new Map.Entry<K, V>() {
+					private K e;
+					private V l;
+					private boolean taken = false;
+
+					private void evaluate() {
+						if (!taken) {
+							regen();
+							Map.Entry<K, V> entry = entries.stream().limit(1).findFirst()
+									.orElseThrow(NullPointerException::new);
+							entries.remove(entry);
+
+							e =  entry.getKey();
+							l =  entry.getValue();
+
+							taken = true;
+						}
+					}
+
+					@Override
+					public K getKey() {
+						evaluate();
+						return e;
+					}
+
+					@Override
+					public V getValue() {
+						evaluate();
+						return l;
+					}
+
+					@Override
+					public V setValue(V value) {
+						throw new UnsupportedOperationException();
+					}
+				};
+		}
 	}
 }

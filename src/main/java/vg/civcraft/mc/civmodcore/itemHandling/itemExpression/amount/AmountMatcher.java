@@ -12,4 +12,8 @@ public interface AmountMatcher extends Matcher<Double> {
 	default boolean matches(int amount) {
 		return matches((double) amount);
 	}
+
+	default int solve(int defaultAmount) throws NotSolvableException {
+		return (int) (double) solve((double) defaultAmount);
+	}
 }

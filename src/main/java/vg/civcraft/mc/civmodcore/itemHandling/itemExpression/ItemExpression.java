@@ -1,6 +1,9 @@
 package vg.civcraft.mc.civmodcore.itemHandling.itemExpression;
 
-import org.bukkit.*;
+import org.bukkit.Color;
+import org.bukkit.DyeColor;
+import org.bukkit.FireworkEffect;
+import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.configuration.ConfigurationSection;
@@ -8,7 +11,7 @@ import org.bukkit.configuration.MemoryConfiguration;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.TropicalFish;
 import org.bukkit.inventory.*;
-import org.bukkit.inventory.meta.*;
+import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.map.MapView;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
@@ -21,10 +24,15 @@ import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.color.ListColor;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enchantment.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enummatcher.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.firework.*;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.lore.ExactlyLore;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.lore.ItemLoreMatcher;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.lore.LoreMatcher;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.lore.RegexLore;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.map.*;
-import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc.ItemExactlyInventoryMatcher;
-import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.lore.*;
-import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.*;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.ExactlyMaterial;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.ItemMaterialMatcher;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.MaterialMatcher;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.RegexMaterial;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.mobspawner.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.name.*;
@@ -550,9 +558,10 @@ public class ItemExpression implements Matcher<ItemStack> {
 
 			return Optional.of(new EnumFromListMatcher<>(properties, notInList));
 		} if (config.isInt(path + ".index")) {
-			return Optional.of(new EnumIndexMatcher<>(config.getInt(path + ".index")));
+			return Optional.of(new EnumIndexMatcher<>(config.getInt(path + ".index"), enumClass));
 		} else {
-			return parseName(config, path, false).map(NameEnumMatcher::new);
+			return parseName(config, path, false)
+					.map(nameMatcher -> new NameEnumMatcher<E>(nameMatcher, enumClass));
 		}
 	}
 
@@ -828,6 +837,21 @@ public class ItemExpression implements Matcher<ItemStack> {
 		return matchers.stream().allMatch((matcher) -> matcher.matches(item));
 	}
 
+	@Override
+	public ItemStack solve(ItemStack inheritFrom) throws NotSolvableException {
+		inheritFrom = inheritFrom.clone();
+
+		for (ItemMatcher matcher : matchers) {
+			inheritFrom = matcher.solve(inheritFrom);
+		}
+
+		return inheritFrom;
+	}
+
+	public ItemStack solve() throws NotSolvableException {
+		return solve(new ItemStack(Material.AIR, 1));
+	}
+
 	/**
 	 * Returns a lambda with the ItemMap bound into its environment. This is an instance of currying in java.
 	 *
@@ -849,7 +873,7 @@ public class ItemExpression implements Matcher<ItemStack> {
 		// currying in java 2019
 		return (kv) -> {
 			ItemStack item = kv.getKey();
-			//Integer amount = kv.getValue();
+			//Integer amount = kv.get();
 			return matchers.stream().allMatch((matcher) -> {
 				if (matcher instanceof ItemMapMatcher) {
 					return ((ItemMapMatcher) matcher).matches(itemMap, item);
@@ -974,11 +998,10 @@ public class ItemExpression implements Matcher<ItemStack> {
 	}
 
 	/**
-	 * Abstraction for the algorithm defined in removeFromInventory's javadoc.
 	 * @param random To select a random number within amount. This only applies if amount is a range.
 	 * @return The amount field of the config format. This is extracted from the structure of this ItemStack, not the config.
 	 */
-	private int getAmount(boolean random) {
+	public int getAmount(boolean random) {
 		List<ItemAmountMatcher> amountMatchers = matchers.stream()
 				.filter((m) -> m instanceof ItemAmountMatcher)
 				.map((m) -> (ItemAmountMatcher) m)

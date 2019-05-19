@@ -30,4 +30,9 @@ public class EnumFromListMatcher<E extends Enum<E>> implements EnumMatcher<E> {
 			return enums.contains(enumm);
 		}
 	}
+
+	@Override
+	public E solve(E defaultValue) throws NotSolvableException {
+		return enums.get(0);
+	}
 }

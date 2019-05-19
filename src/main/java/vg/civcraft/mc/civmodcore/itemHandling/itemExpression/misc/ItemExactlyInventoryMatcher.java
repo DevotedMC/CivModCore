@@ -1,6 +1,8 @@
 package vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc;
 
+import org.bukkit.Material;
 import org.bukkit.block.Container;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BlockStateMeta;
 import vg.civcraft.mc.civmodcore.itemHandling.ItemMap;
@@ -26,6 +28,32 @@ public class ItemExactlyInventoryMatcher implements ItemMatcher {
 	@Override
 	public boolean matches(ItemStack item) {
 		return getItemHeldInventory(item).itemExpressionsMatchItems(itemExpressions);
+	}
+
+	@Override
+	public ItemStack solve(ItemStack item) throws NotSolvableException {
+		if (!item.hasItemMeta() || !(item.getItemMeta() instanceof BlockStateMeta) ||
+				!((BlockStateMeta) item.getItemMeta()).hasBlockState() ||
+				!(((BlockStateMeta) item.getItemMeta()).getBlockState() instanceof Container))
+			item.setType(Material.SHULKER_BOX);
+
+		ItemMap map = new ItemMap();
+		for (ItemExpression itemExpression : itemExpressions) {
+			map.addItemAmount(itemExpression.solve(), itemExpression.getAmount(false));
+		}
+
+		BlockStateMeta meta = (BlockStateMeta) item.getItemMeta();
+		Container container = (Container) meta.getBlockState();
+		Inventory inventory = container.getInventory();
+
+		if (!map.fitsIn(inventory))
+				throw new NotSolvableException("doesn't fit inside inventory");
+		map.getItemStackRepresentation().forEach(inventory::addItem);
+
+		meta.setBlockState(container);
+		item.setItemMeta(meta);
+
+		return item;
 	}
 
 	/**

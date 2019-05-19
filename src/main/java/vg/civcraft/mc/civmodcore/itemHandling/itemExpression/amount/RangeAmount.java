@@ -62,4 +62,15 @@ public class RangeAmount implements AmountMatcher {
 
 		return true;
 	}
+
+	@Override
+	public Double solve(Double defaultValue) throws NotSolvableException {
+		if (matches(defaultValue))
+			return defaultValue;
+
+		if (low == high && !highInclusive && !lowInclusive)
+			throw new NotSolvableException("range has equal low and high and is exclusive");
+
+		return low + (lowInclusive ? 0 : 1);
+	}
 }

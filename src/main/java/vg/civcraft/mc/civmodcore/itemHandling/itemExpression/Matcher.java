@@ -22,4 +22,28 @@ public interface Matcher<T> {
 	 * @return If this matcher matched the thing.
 	 */
 	boolean matches(T matched);
+
+	/**
+	 * Mutates the state of defaultValue such that matches(defaultValue) == true.
+	 *
+	 * If a value for startingValue where matches(defaultValue) == true, then NotSolvableException should be thrown.
+	 * @param defaultValue Used as a "base" value for feilds that don't need changed for matches(defaultValue) to be true.
+	 *                     This may or may not be mutated.
+	 * @return The value that matches this matcher.
+	 * @throws NotSolvableException If a state for defaultValue could not be found that matches.
+	 */
+	T solve(T defaultValue) throws NotSolvableException;
+
+	/**
+	 * Thrown if a certain matcher can not be solved.
+	 */
+	class NotSolvableException extends Exception {
+		public NotSolvableException(String message, Throwable cause) {
+			super(message, cause);
+		}
+
+		public NotSolvableException(String message) {
+			super(message);
+		}
+	}
 }

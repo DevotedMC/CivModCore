@@ -1,7 +1,9 @@
 package vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc;
 
+import org.bukkit.Bukkit;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.ItemMatcher;
 
 public class ItemFlagMatcher implements ItemMatcher {
@@ -24,5 +26,18 @@ public class ItemFlagMatcher implements ItemMatcher {
 		}
 
 		return this.setting == setting;
+	}
+
+	@Override
+	public ItemStack solve(ItemStack item) throws NotSolvableException {
+		ItemMeta meta = item.hasItemMeta() ? item.getItemMeta() : Bukkit.getItemFactory().getItemMeta(item.getType());
+
+		if (setting == true)
+			meta.addItemFlags(flag);
+		else
+			meta.removeItemFlags(flag);
+
+		item.setItemMeta(meta);
+		return item;
 	}
 }

@@ -18,4 +18,9 @@ public class RegexMaterial implements MaterialMatcher {
 	public boolean matches(Material material) {
 		return regex.matcher(material.toString()).matches();
 	}
+
+	@Override
+	public Material solve(Material defaultValue) throws NotSolvableException {
+		throw new NotSolvableException("can't solve a regex");
+	}
 }

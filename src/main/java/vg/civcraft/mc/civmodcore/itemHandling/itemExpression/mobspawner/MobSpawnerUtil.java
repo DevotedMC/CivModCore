@@ -1,5 +1,6 @@
 package vg.civcraft.mc.civmodcore.itemHandling.itemExpression.mobspawner;
 
+import org.bukkit.Material;
 import org.bukkit.block.CreatureSpawner;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BlockStateMeta;
@@ -46,5 +47,12 @@ public class MobSpawnerUtil {
 		BlockStateMeta meta = (BlockStateMeta) item.getItemMeta();
 
 		return (CreatureSpawner) meta.getBlockState();
+	}
+
+	public static void setToMobSpawner(ItemStack item) {
+		if (isMobSpawner(item))
+			return;
+
+		item.setType(Material.SPAWNER);
 	}
 }

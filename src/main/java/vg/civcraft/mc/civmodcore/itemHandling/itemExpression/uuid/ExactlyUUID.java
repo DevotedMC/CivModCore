@@ -16,4 +16,9 @@ public class ExactlyUUID implements UUIDMatcher {
 	public boolean matches(UUID uuid) {
 		return this.uuid.equals(uuid);
 	}
+
+	@Override
+	public UUID solve(UUID defaultValue) throws NotSolvableException {
+		return uuid;
+	}
 }

@@ -1,6 +1,7 @@
 package vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc;
 
 import org.bukkit.Color;
+import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.ItemMatcher;
@@ -29,5 +30,19 @@ public class ItemLeatherArmorColorMatcher implements ItemMatcher {
 
 		Color leatherColor = ((LeatherArmorMeta) item.getItemMeta()).getColor();
 		return color.matches(leatherColor);
+	}
+
+	@Override
+	public ItemStack solve(ItemStack item) throws NotSolvableException {
+		if (!item.hasItemMeta() || !(item.getItemMeta() instanceof LeatherArmorMeta))
+			item.setType(Material.LEATHER_CHESTPLATE);
+
+		assert item.getItemMeta() instanceof LeatherArmorMeta;
+
+		LeatherArmorMeta meta = (LeatherArmorMeta) item.getItemMeta();
+
+		meta.setColor(color.solve(meta.getColor()));
+		item.setItemMeta(meta);
+		return item;
 	}
 }
