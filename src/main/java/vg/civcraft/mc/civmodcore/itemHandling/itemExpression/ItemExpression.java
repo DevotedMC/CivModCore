@@ -120,16 +120,16 @@ public class ItemExpression implements Matcher<ItemStack> {
 		addMatcher(ItemNameMatcher.construct(parseName(config, "name")));
 
 		// enchantments (example: eff5 diamond pickaxe)
-		addMatcher(parseEnchantment(config, "enchantmentsAny", ANY, ITEM));
-		addMatcher(parseEnchantment(config, "enchantmentsAll", ALL, ITEM));
-		addMatcher(parseEnchantment(config, "enchantmentsNone", NONE, ITEM));
-		addMatcher(parseEnchangmentCount(config, "enchantmentCount", ITEM));
+		addMatcher(parseEnchantment(config, "enchantments.any", ANY, ITEM));
+		addMatcher(parseEnchantment(config, "enchantments.all", ALL, ITEM));
+		addMatcher(parseEnchantment(config, "enchantments.none", NONE, ITEM));
+		addMatcher(parseEnchangmentCount(config, "enchantment.count", ITEM));
 
 		// held enchantments (example: enchanted book)
-		addMatcher(parseEnchantment(config, "enchantmentsHeldAny", ANY, HELD));
-		addMatcher(parseEnchantment(config, "enchantmentsHeldAll", ALL, HELD));
-		addMatcher(parseEnchantment(config, "enchantmentsHeldNone", NONE, HELD));
-		addMatcher(parseEnchangmentCount(config, "enchantmentHeldCount", HELD));
+		addMatcher(parseEnchantment(config, "enchantments.held.any", ANY, HELD));
+		addMatcher(parseEnchantment(config, "enchantments.held.all", ALL, HELD));
+		addMatcher(parseEnchantment(config, "enchantments.held.none", NONE, HELD));
+		addMatcher(parseEnchangmentCount(config, "enchantment.held.count", HELD));
 
 		// skull
 		addMatcher(ItemSkullMatcher.construct(parseSkull(config, "skull")));
@@ -154,8 +154,8 @@ public class ItemExpression implements Matcher<ItemStack> {
 		addMatcher(parseExactly(config, "exactly"));
 
 		// knowlege book (creative item that holds recipe unlocks)
-		addMatcher(ItemKnowledgeBookMatcher.construct(parseName(config, "knowlegebook.recipesAny"), false));
-		addMatcher(ItemKnowledgeBookMatcher.construct(parseName(config, "knowlegebook.recipesAll"), true));
+		addMatcher(ItemKnowledgeBookMatcher.construct(parseName(config, "knowlegebook.recipes.any"), false));
+		addMatcher(ItemKnowledgeBookMatcher.construct(parseName(config, "knowlegebook.recipes.all"), true));
 
 		// potion
 		addMatcher(parsePotion(config, "potion"));
@@ -431,9 +431,9 @@ public class ItemExpression implements Matcher<ItemStack> {
 
 		ConfigurationSection potion = config.getConfigurationSection(path);
 
-		matchers.add(parsePotionEffects(potion,  "customEffectsAny", ANY).orElse(null));
-		matchers.add(parsePotionEffects(potion, "customEffectsAll", ALL).orElse(null));
-		matchers.add(parsePotionEffects(potion, "customEffectsNone", NONE).orElse(null));
+		matchers.add(parsePotionEffects(potion,  "customEffects.any", ANY).orElse(null));
+		matchers.add(parsePotionEffects(potion, "customEffects.all", ALL).orElse(null));
+		matchers.add(parsePotionEffects(potion, "customEffects.none", NONE).orElse(null));
 
 		if (potion.isConfigurationSection("base")) {
 			ConfigurationSection base = potion.getConfigurationSection("base");
