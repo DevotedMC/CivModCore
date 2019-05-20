@@ -233,6 +233,19 @@ public class ItemExpression implements Matcher<ItemStack> {
 		return list;
 	}
 
+	public static Map<String, ItemExpression> getItemExpressionMap(ConfigurationSection config, String path) {
+		if (!config.isConfigurationSection(path))
+			return Collections.emptyMap();
+
+		HashMap<String, ItemExpression> result = new HashMap<>();
+		ConfigurationSection ieConfig = config.getConfigurationSection(path);
+		for (String section : ieConfig.getKeys(false)) {
+			result.put(section, getItemExpression(ieConfig, section).orElseThrow(AssertionError::new));
+		}
+
+		return result;
+	}
+
 	private Optional<AmountMatcher> parseAmount(ConfigurationSection config, String path) {
 		if (config.contains(path + ".range"))
 			return Optional.of((new RangeAmount(
