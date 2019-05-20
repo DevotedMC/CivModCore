@@ -29,10 +29,6 @@ import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.lore.ItemLoreMatche
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.lore.LoreMatcher;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.lore.RegexLore;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.map.*;
-import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.ExactlyMaterial;
-import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.ItemMaterialMatcher;
-import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.MaterialMatcher;
-import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material.RegexMaterial;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.mobspawner.*;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.name.*;
@@ -105,7 +101,7 @@ public class ItemExpression implements Matcher<ItemStack> {
 	 */
 	public void parseConfig(ConfigurationSection config) {
 		// material
-		addMatcher(ItemMaterialMatcher.construct(parseMaterial(config, "material")));
+		addMatcher(ItemMaterialMatcher.construct(parseEnumMatcher(config, "material", Material.class)));
 
 		// amount
 		addMatcher(ItemAmountMatcher.construct(parseAmount(config, "amount")));
@@ -235,14 +231,6 @@ public class ItemExpression implements Matcher<ItemStack> {
 		}
 
 		return list;
-	}
-
-	private Optional<MaterialMatcher> parseMaterial(ConfigurationSection config, String path) {
-		if (config.contains(path + ".regex"))
-			return Optional.of(new RegexMaterial(Pattern.compile(config.getString(path + ".regex"))));
-		else if (config.contains(path))
-			return Optional.of(new ExactlyMaterial(Material.getMaterial(config.getString(path))));
-		return Optional.empty();
 	}
 
 	private Optional<AmountMatcher> parseAmount(ConfigurationSection config, String path) {

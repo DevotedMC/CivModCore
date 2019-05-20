@@ -1,7 +1,9 @@
-package vg.civcraft.mc.civmodcore.itemHandling.itemExpression.material;
+package vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc;
 
+import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.ItemMatcher;
+import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enummatcher.EnumMatcher;
 
 import java.util.Optional;
 
@@ -9,15 +11,15 @@ import java.util.Optional;
  * @author Ameliorate
  */
 public class ItemMaterialMatcher implements ItemMatcher {
-	public ItemMaterialMatcher(MaterialMatcher matcher) {
+	public ItemMaterialMatcher(EnumMatcher<Material> matcher) {
 		this.matcher = matcher;
 	}
 
-	public static ItemMaterialMatcher construct(Optional<MaterialMatcher> matcher) {
+	public static ItemMaterialMatcher construct(Optional<EnumMatcher<Material>> matcher) {
 		return matcher.map(ItemMaterialMatcher::new).orElse(null);
 	}
 
-	public MaterialMatcher matcher;
+	public EnumMatcher<Material> matcher;
 
 	@Override
 	public boolean matches(ItemStack item) {
