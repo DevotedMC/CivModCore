@@ -63,7 +63,7 @@ public class ItemFireworkEffectsCountMatcher implements ItemMatcher {
 
 	@SuppressWarnings("UnstableApiUsage")
 	public static FireworkEffect getFireworkEffectWithIndex(int i) {
-		int b = Hashing.md5().hashInt(i).asInt(); // probably overkill, but oh well. I don't have internet right now
+		int b = Hashing.crc32().hashInt(i).asInt();
 		boolean trail = (b & TRAIL_MASK) == 1;
 		boolean flicker = (b & FLICK_MASK) == 2;
 		int typeIndex = b & TYPE_MASK >>> 2;
