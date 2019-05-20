@@ -196,6 +196,12 @@ public class ItemExpression implements Matcher<ItemStack> {
 		return Optional.of(new ItemExpression(configurationSection.getConfigurationSection(path)));
 	}
 
+	/**
+	 * Parses out a list of ItemExpressions from a config.
+	 * @param config The config to parse
+	 * @param path The path to the list of ItemExpressions
+	 * @return A list of ItemExpressions parsed from the config.
+	 */
 	public static List<ItemExpression> getItemExpressionList(ConfigurationSection config, String path) {
 		if (!config.contains(path))
 			return Collections.emptyList();
@@ -837,6 +843,14 @@ public class ItemExpression implements Matcher<ItemStack> {
 		return matchers.stream().allMatch((matcher) -> matcher.matches(item));
 	}
 
+	/**
+	 * Solves this ItemExpression for an ItemStack that matches, taking base attributes from the passed ItemStack.
+	 * @param inheritFrom The itemstack whose attributes and nbt data will be inherited from if this ItemExpression
+	 *                    doesn't mutate them while solving.
+	 * @return An ItemStack that satisfies the conditions of this piticular ItemStack such that matches(item) == true.
+	 * @throws NotSolvableException If this ItemExpression uses elements such as Regular Expression matching that can
+	 * 								not be solved in reasonable time.
+	 */
 	@Override
 	public ItemStack solve(ItemStack inheritFrom) throws NotSolvableException {
 		inheritFrom = inheritFrom.clone();
@@ -848,6 +862,12 @@ public class ItemExpression implements Matcher<ItemStack> {
 		return inheritFrom;
 	}
 
+	/**
+	 * Solves this ItemExpression for an ItemStack item where matches(item) == true.
+	 * @return An ItemStack that satisfies the conditions of this piticular ItemStack such that matches(item) == true.
+	 * @throws NotSolvableException If this ItemExpression uses elements such as Regular Expression matching that can
+	 * 								not be solved in reasonable time.
+	 */
 	public ItemStack solve() throws NotSolvableException {
 		return solve(new ItemStack(Material.AIR, 1));
 	}

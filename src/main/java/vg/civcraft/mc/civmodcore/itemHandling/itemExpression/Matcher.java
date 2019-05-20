@@ -36,6 +36,9 @@ public interface Matcher<T> {
 
 	/**
 	 * Thrown if a certain matcher can not be solved.
+	 *
+	 * This might be thrown if the matcher is based on Regular Expressions, as most regular expressions can not be
+	 * solved in reasonable time.
 	 */
 	class NotSolvableException extends Exception {
 		public NotSolvableException(String message, Throwable cause) {
