@@ -4,3 +4,19 @@ authors: [valadian, rourke750, ProgrammerDan, Maxopoly, DeadBeef]
 main: ${groupId}.${name}Plugin
 api-version: 1.13
 dev-url: null
+
+commands:
+  testitemsolving:
+    description: Test item solving using an ItemExpression in the CivModCore config. This will give you an item that matches the ItemExpression.
+    usage: /testitemsolving [name]
+    permission: civmodcore.test
+  testitemmatching:
+    description: Test item matching using an ItemExpression in the CivModCore config. This will tell you if the item in your hand matches an ItemExpression.
+    usage: /testitemmatches [name]
+    permission: civmodcore.test
+
+permissions:
+  civmodcore.test:
+    description: Allows testing internal APIs of CivModCore. Note that this permission unlocks commands that can be used to give/dupe items.
+    default: op
+
