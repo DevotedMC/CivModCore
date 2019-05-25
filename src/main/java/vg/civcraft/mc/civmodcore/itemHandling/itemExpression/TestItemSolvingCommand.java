@@ -20,6 +20,7 @@ public class TestItemSolvingCommand implements CommandExecutor {
 			return true;
 		}
 
+		CivModCorePlugin.getInstance().reloadConfig();
 		Map<String, ItemExpression> itemExpressions = ItemExpression.getItemExpressionMap(
 						CivModCorePlugin.getInstance().getConfig(), "itemExpressions");
 
