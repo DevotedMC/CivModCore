@@ -5,16 +5,11 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import vg.civcraft.mc.civmodcore.CivModCorePlugin;
 
 import java.util.Map;
 
 public class TestItemSolvingCommand implements CommandExecutor {
-	public TestItemSolvingCommand(Map<String, ItemExpression> itemExpressions) {
-		this.itemExpressions = itemExpressions;
-	}
-
-	Map<String, ItemExpression> itemExpressions;
-
 	@Override
 	public boolean onCommand(CommandSender commandSender, Command command, String name, String[] args) {
 		if (args.length != 1)
@@ -25,14 +20,16 @@ public class TestItemSolvingCommand implements CommandExecutor {
 			return true;
 		}
 
+		Map<String, ItemExpression> itemExpressions = ItemExpression.getItemExpressionMap(
+						CivModCorePlugin.getInstance().getConfig(), "itemExpressions");
+
 		Player player = (Player) commandSender;
 
-		System.out.println(itemExpressions);
 		String ieName = args[0];
 		ItemExpression expression = itemExpressions.get(ieName);
 
 		try {
-			player.getLocation().getWorld().dropItem(player.getLocation(), expression.solve());
+			player.getInventory().addItem(expression.solve());
 		} catch (Matcher.NotSolvableException e) {
 			e.printStackTrace();
 			commandSender.sendMessage(ChatColor.RED + "Could not solve item expression: " + e.getLocalizedMessage() +

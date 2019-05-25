@@ -1,10 +1,7 @@
 package vg.civcraft.mc.civmodcore;
 
-import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.ItemExpression;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.TestItemSolvingCommand;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.TestMatchingCommand;
-
-import java.util.Map;
 
 /**
  * The sole purpose of this class is to make Spigot recognize this library as a plugin and automatically load the
@@ -22,10 +19,8 @@ public class CivModCorePlugin extends ACivMod {
 		// needed for some of the apis
 		instance = this;
 
-		Map<String, ItemExpression> itemExpressions = ItemExpression.getItemExpressionMap(getConfig(), "itemExpressions");
-
-		getCommand("testitemsolving").setExecutor(new TestItemSolvingCommand(itemExpressions));
-		getCommand("testitemmatching").setExecutor(new TestMatchingCommand(itemExpressions));
+		getCommand("testitemsolving").setExecutor(new TestItemSolvingCommand());
+		getCommand("testitemmatching").setExecutor(new TestMatchingCommand());
 	}
 
 	public static CivModCorePlugin getInstance() {

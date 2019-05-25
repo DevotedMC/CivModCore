@@ -6,16 +6,11 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import vg.civcraft.mc.civmodcore.CivModCorePlugin;
 
 import java.util.Map;
 
 public class TestMatchingCommand implements CommandExecutor {
-	public TestMatchingCommand(Map<String, ItemExpression> itemExpressions) {
-		this.itemExpressions = itemExpressions;
-	}
-
-	Map<String, ItemExpression> itemExpressions;
-
 	@Override
 	public boolean onCommand(CommandSender commandSender, Command command, String name, String[] args) {
 		if (args.length != 1)
@@ -25,6 +20,9 @@ public class TestMatchingCommand implements CommandExecutor {
 			commandSender.sendMessage(ChatColor.RED + "This command can only be used by players.");
 			return true;
 		}
+
+		Map<String, ItemExpression> itemExpressions = ItemExpression.getItemExpressionMap(
+				CivModCorePlugin.getInstance().getConfig(), "itemExpressions");
 
 		Player player = (Player) commandSender;
 
