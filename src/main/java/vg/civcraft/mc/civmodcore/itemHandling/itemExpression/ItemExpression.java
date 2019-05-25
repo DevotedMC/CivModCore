@@ -1,13 +1,11 @@
 package vg.civcraft.mc.civmodcore.itemHandling.itemExpression;
 
-import org.bukkit.Color;
-import org.bukkit.DyeColor;
-import org.bukkit.FireworkEffect;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.MemoryConfiguration;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.TropicalFish;
 import org.bukkit.inventory.*;
@@ -106,8 +104,8 @@ public class ItemExpression implements Matcher<ItemStack> {
 		// amount
 		addMatcher(ItemAmountMatcher.construct(parseAmount(config, "amount")));
 
-		// durability
-		addMatcher(ItemDurabilityMatcher.construct(parseAmount(config, "durability")));
+		// damage
+		addMatcher(ItemDamageMatcher.construct(parseAmount(config, "damage")));
 
 		// lore
 		addMatcher(ItemLoreMatcher.construct(parseLore(config, "lore")));
@@ -119,13 +117,13 @@ public class ItemExpression implements Matcher<ItemStack> {
 		addMatcher(parseEnchantment(config, "enchantments.any", ANY, ITEM));
 		addMatcher(parseEnchantment(config, "enchantments.all", ALL, ITEM));
 		addMatcher(parseEnchantment(config, "enchantments.none", NONE, ITEM));
-		addMatcher(parseEnchangmentCount(config, "enchantment.count", ITEM));
+		addMatcher(parseEnchangmentCount(config, "enchantments.count", ITEM));
 
 		// held enchantments (example: enchanted book)
 		addMatcher(parseEnchantment(config, "enchantments.held.any", ANY, HELD));
 		addMatcher(parseEnchantment(config, "enchantments.held.all", ALL, HELD));
 		addMatcher(parseEnchantment(config, "enchantments.held.none", NONE, HELD));
-		addMatcher(parseEnchangmentCount(config, "enchantment.held.count", HELD));
+		addMatcher(parseEnchangmentCount(config, "enchantments.held.count", HELD));
 
 		// skull
 		addMatcher(ItemSkullMatcher.construct(parseSkull(config, "skull")));
@@ -302,7 +300,8 @@ public class ItemExpression implements Matcher<ItemStack> {
 			if (enchantName.equals("any")) {
 				matcher = new AnyEnchantment(amountMatcher);
 			} else {
-				matcher = new AnyEnchantment(amountMatcher);
+				matcher = new ExactlyEnchantment(Enchantment.getByKey(NamespacedKey.minecraft(enchantName)),
+						amountMatcher);
 			}
 
 			enchantmentMatcher.add(matcher);
@@ -566,6 +565,12 @@ public class ItemExpression implements Matcher<ItemStack> {
 			return Optional.of(new EnumFromListMatcher<>(properties, notInList));
 		} if (config.isInt(path + ".index")) {
 			return Optional.of(new EnumIndexMatcher<>(config.getInt(path + ".index"), enumClass));
+		} if (config.isString(path)) {
+			E en = Arrays.stream(enumClass.getEnumConstants())
+					.filter((e) -> e.name().equals(config.getString(path)))
+					.findFirst()
+					.orElseThrow(() -> new Error("could not find enum constant " + config.getString(path)));
+			return Optional.of(new ExactlyEnumMatcher<>(en));
 		} else {
 			return parseName(config, path, false)
 					.map(nameMatcher -> new NameEnumMatcher<E>(nameMatcher, enumClass));
@@ -841,6 +846,10 @@ public class ItemExpression implements Matcher<ItemStack> {
 	 * @return If the given item matches.
 	 */
 	public boolean matches(ItemStack item) {
+		//System.out.println("These match:");
+		//matchers.stream().filter((matcher) -> matcher.matches(item)).forEach(System.out::println);
+		//System.out.println("These do not match:");
+		//matchers.stream().filter((matcher) -> !matcher.matches(item)).forEach(System.out::println);
 		return matchers.stream().allMatch((matcher) -> matcher.matches(item));
 	}
 
@@ -857,6 +866,12 @@ public class ItemExpression implements Matcher<ItemStack> {
 		inheritFrom = inheritFrom.clone();
 
 		for (ItemMatcher matcher : matchers) {
+			if (!inheritFrom.hasItemMeta()) {
+				inheritFrom.setItemMeta(Bukkit.getItemFactory().getItemMeta(inheritFrom.getType()));
+				// so many matchers require meta that setting it here fixes a lot of bugs
+				// although it also creates a lot of dead code
+			}
+
 			inheritFrom = matcher.solve(inheritFrom);
 		}
 
@@ -870,7 +885,7 @@ public class ItemExpression implements Matcher<ItemStack> {
 	 * 								not be solved in reasonable time.
 	 */
 	public ItemStack solve() throws NotSolvableException {
-		return solve(new ItemStack(Material.AIR, 1));
+		return solve(new ItemStack(Material.STONE, 1));
 	}
 
 	/**
@@ -1129,5 +1144,5 @@ public class ItemExpression implements Matcher<ItemStack> {
 	 *
 	 * This is the only data structure holding ItemMatchers in this ItemExpression, so it is fine to mutate this field.
 	 */
-	public HashSet<ItemMatcher> matchers = new HashSet<>();
+	public ArrayList<ItemMatcher> matchers = new ArrayList<>();
 }

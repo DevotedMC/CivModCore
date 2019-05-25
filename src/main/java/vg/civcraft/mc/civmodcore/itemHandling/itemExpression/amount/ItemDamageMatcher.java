@@ -1,6 +1,5 @@
 package vg.civcraft.mc.civmodcore.itemHandling.itemExpression.amount;
 
-import org.bukkit.Bukkit;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -11,13 +10,13 @@ import java.util.Optional;
 /**
  * @author Ameliorate
  */
-public class ItemDurabilityMatcher implements ItemMatcher {
-	public ItemDurabilityMatcher(AmountMatcher matcher) {
+public class ItemDamageMatcher implements ItemMatcher {
+	public ItemDamageMatcher(AmountMatcher matcher) {
 		this.matcher = matcher;
 	}
 
-	public static ItemDurabilityMatcher construct(Optional<AmountMatcher> matcher) {
-		return matcher.map(ItemDurabilityMatcher::new).orElse(null);
+	public static ItemDamageMatcher construct(Optional<AmountMatcher> matcher) {
+		return matcher.map(ItemDamageMatcher::new).orElse(null);
 	}
 
 	public AmountMatcher matcher;
@@ -32,9 +31,9 @@ public class ItemDurabilityMatcher implements ItemMatcher {
 
 	@Override
 	public ItemStack solve(ItemStack item) throws NotSolvableException {
-		ItemMeta meta = item.hasItemMeta() ? item.getItemMeta() : Bukkit.getItemFactory().getItemMeta(item.getType());
+		ItemMeta meta = item.getItemMeta();
 
-		if (!(item instanceof Damageable))
+		if (!(meta instanceof Damageable))
 			throw new NotSolvableException("item does not have durability");
 
 		((Damageable) meta).setDamage(matcher.solve(1));

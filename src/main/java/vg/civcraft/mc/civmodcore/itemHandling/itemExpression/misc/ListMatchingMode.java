@@ -3,10 +3,7 @@ package vg.civcraft.mc.civmodcore.itemHandling.itemExpression.misc;
 import com.google.common.collect.Lists;
 import vg.civcraft.mc.civmodcore.itemHandling.itemExpression.Matcher;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -170,15 +167,21 @@ public enum ListMatchingMode {
 
 		public LazyFromListEntrySupplier(Collection<Map.Entry<K, V>> collection) {
 			this(() -> new ArrayList<>(collection));
+			if (collection.isEmpty())
+				throw new AssertionError("collection can not be empty");
 		}
 
 		public LazyFromListEntrySupplier(Map<K, V> map) {
-			this(map.entrySet());
+			this(new HashMap<>(map).entrySet());
+			if (map.isEmpty())
+				throw new AssertionError("map can not be empty");
 		}
 
 		private void regen() {
 			if (entries == null || entries.isEmpty())
 				entries = entriesSupplier.get();
+			if (entries.isEmpty())
+				throw new AssertionError("entries can not be empty");
 		}
 
 		public Collection<Map.Entry<K, V>> entries;

@@ -13,6 +13,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static vg.civcraft.mc.civmodcore.itemHandling.itemExpression.enchantment.EnchantmentsSource.HELD;
+
 /**
  * @author Ameliorate
  */
@@ -33,7 +35,7 @@ public class ItemEnchantmentCountMatcher implements ItemMatcher {
 	public boolean matches(ItemStack item) {
 		if (!item.hasItemMeta())
 			return false;
-		if (source == EnchantmentsSource.HELD && !(item.getItemMeta() instanceof EnchantmentStorageMeta))
+		if (source == HELD && !(item.getItemMeta() instanceof EnchantmentStorageMeta))
 			return false;
 
 		int count = 0;
@@ -74,7 +76,9 @@ public class ItemEnchantmentCountMatcher implements ItemMatcher {
 		boolean unsafe = false;
 
 		while (!enchantmentCount.matches(source.get(item).size())) {
-			source.add(item, allEnchantments.get(i++), 1, unsafe);
+			if (unsafe || source == HELD || allEnchantments.get(i).canEnchantItem(item))
+				source.add(item, allEnchantments.get(i), 1, unsafe);
+			i++;
 
 			if (i >= allEnchantments.size() && unsafe)
 				throw new NotSolvableException("not enough enchantments exist to solve for enchantment count on item");

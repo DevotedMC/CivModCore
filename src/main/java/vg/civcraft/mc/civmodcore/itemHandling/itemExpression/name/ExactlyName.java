@@ -9,7 +9,7 @@ public class ExactlyName implements NameMatcher {
 	}
 
 	public ExactlyName(String name, boolean caseSensitive) {
-		this.name = name.toLowerCase();
+		this.name = name;
 		this.caseSensitive = caseSensitive;
 	}
 

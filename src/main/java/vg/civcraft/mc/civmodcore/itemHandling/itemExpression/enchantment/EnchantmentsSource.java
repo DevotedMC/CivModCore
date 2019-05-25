@@ -55,7 +55,7 @@ public enum EnchantmentsSource {
 		}
 
 		if (this == HELD) {
-			if (!(item.hasItemMeta()) || !(item.getItemMeta() instanceof EnchantmentStorageMeta))
+			if (!(item.getItemMeta() instanceof EnchantmentStorageMeta))
 				throw new IllegalArgumentException("item does not store enchantments");
 
 			EnchantmentStorageMeta meta = (EnchantmentStorageMeta) item.getItemMeta();
