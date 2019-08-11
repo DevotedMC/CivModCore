@@ -136,7 +136,6 @@ public class ItemExpression implements Matcher<ItemStack> {
 
 		// held inventory (example: shulker box)
 		addMatcher(parseInventory(config, "inventory"));
-		addMatcher(parseInventory(config, "shulkerbox.inventory"));
 
 		// shulker box color
 		addMatcher(ItemShulkerBoxColorMatcher.construct(parseEnumMatcher(config, "shulkerbox.color", DyeColor.class)));
