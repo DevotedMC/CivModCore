@@ -874,6 +874,10 @@ public class ItemExpression implements Matcher<ItemStack> {
 			inheritFrom = matcher.solve(inheritFrom);
 		}
 
+		if (!matches(inheritFrom)) {
+			throw new NotSolvableException("not solvable: generated item " + inheritFrom + " does not match");
+		}
+
 		return inheritFrom;
 	}
 
